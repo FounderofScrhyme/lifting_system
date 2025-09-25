@@ -13,3 +13,154 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Staff {
+  id              String              @id @default(cuid())
+  name            String
+  birthDate       DateTime
+  phone           String
+  email           String?             @unique
+  postalCode      String?
+  address         String?
+  emergencyName   String
+  emergencyPhone  String
+  bloodType       String?
+  bloodPressure   String?
+  lastCheckupDate DateTime?
+  employmentType  EmploymentType
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  assignments     StaffAssignment[]
+  availabilities  StaffAvailability[]
+}
+
+model Client {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String
+  postalCode   String?
+  address      String?
+  contactName  String?
+  contactPhone String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  sales        Sale[]
+  sites        Site[]
+
+  @@index([name])
+}
+
+model Sale {
+  id        String   @id @default(cuid())
+  clientId  String
+  month     String
+  amount    Int
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client    Client   @relation(fields: [clientId], references: [id])
+
+  @@index([clientId, month])
+  @@index([month])
+}
+
+model Site {
+  id           String            @id @default(cuid())
+  name         String
+  clientId     String
+  date         DateTime
+  startTime    String
+  siteType     SiteType
+  managerName  String?
+  managerPhone String?
+  postalCode   String?
+  address      String
+  googleMapUrl String?
+  cancelled    Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  notes        String?
+  client       Client            @relation(fields: [clientId], references: [id])
+  assignments  StaffAssignment[]
+  externalAssignments ExternalStaffAssignment[]
+}
+
+
+
+model StaffAvailability {
+  id        String           @id @default(cuid())
+  staffId   String
+  date      DateTime
+  type      AvailabilityType
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  staff     Staff            @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, date])
+  @@index([staffId, date])
+  @@index([date])
+}
+
+model StaffAssignment {
+  id        String   @id @default(cuid())
+  date      DateTime
+  siteId    String
+  staffId   String
+  timeSlot  TimeSlot @default(AM)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, staffId, date, timeSlot])
+  @@index([siteId, date])
+  @@index([staffId, date])
+  @@index([date])
+}
+
+model ExternalStaffAssignment {
+  id                    String   @id @default(cuid())
+  date                  DateTime
+  siteId                String
+  externalStaffName     String
+  externalStaffCompany  String
+  externalStaffNotes    String?
+  timeSlot              TimeSlot @default(AM)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  site                  Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, externalStaffName, date, timeSlot])
+  @@index([siteId, date])
+  @@index([externalStaffName, date])
+  @@index([date])
+}
+
+
+enum EmploymentType {
+  SPOT
+  REGULAR
+}
+
+enum SiteType {
+  FULL
+  AM
+  PM
+}
+
+enum AvailabilityType {
+  AVAILABLE_FULL
+  AVAILABLE_AM
+  AVAILABLE_PM
+  HOLIDAY_FULL
+  HOLIDAY_AM
+  HOLIDAY_PM
+}
+
+enum TimeSlot {
+  AM
+  PM
+}

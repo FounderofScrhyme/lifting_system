@@ -1,0 +1,98 @@
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+
+// GET - 特定のスタッフ取得
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const staff = await prisma.staff.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!staff) {
+      return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(staff);
+  } catch (error) {
+    console.error("Error fetching staff:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch staff" },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - スタッフ更新
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json();
+    const {
+      name,
+      birthDate,
+      phone,
+      email,
+      postalCode,
+      address,
+      emergencyName,
+      emergencyPhone,
+      bloodType,
+      bloodPressure,
+      lastCheckupDate,
+      employmentType,
+      notes,
+    } = body;
+
+    const staff = await prisma.staff.update({
+      where: { id: params.id },
+      data: {
+        name,
+        birthDate: new Date(birthDate),
+        phone,
+        email: email || null,
+        postalCode: postalCode || null,
+        address: address || null,
+        emergencyName,
+        emergencyPhone,
+        bloodType: bloodType || null,
+        bloodPressure: bloodPressure || null,
+        lastCheckupDate: lastCheckupDate ? new Date(lastCheckupDate) : null,
+        employmentType,
+        notes: notes || null,
+      },
+    });
+
+    return NextResponse.json(staff);
+  } catch (error) {
+    console.error("Error updating staff:", error);
+    return NextResponse.json(
+      { error: "Failed to update staff" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - スタッフ削除
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await prisma.staff.delete({
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({ message: "Staff deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting staff:", error);
+    return NextResponse.json(
+      { error: "Failed to delete staff" },
+      { status: 500 }
+    );
+  }
+}
