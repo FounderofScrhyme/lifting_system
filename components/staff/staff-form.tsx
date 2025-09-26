@@ -349,7 +349,7 @@ export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SPOT">スポット</SelectItem>
-                  <SelectItem value="REGULAR">社員</SelectItem>
+                  <SelectItem value="REGULAR">レギュラー</SelectItem>
                 </SelectContent>
               </Select>
               {errors.employmentType && (

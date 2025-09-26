@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 interface SiteCalendarToolbarProps {
@@ -18,36 +19,33 @@ export function SiteCalendarToolbar({
   };
 
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-lg font-semibold">{label}</h2>
-      <div className="flex gap-2">
+    <div className="flex items-center justify-between mb-4 p-4 bg-muted/50 rounded-lg">
+      <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => handleNavigate("PREV")}
-          className="flex items-center gap-1"
         >
-          <ChevronLeft className="h-4 w-4" />
-          前月
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleNavigate("TODAY")}
-          className="flex items-center gap-1"
-        >
-          <Calendar className="h-4 w-4" />
-          今日
+          ← 前月
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={() => handleNavigate("NEXT")}
-          className="flex items-center gap-1"
         >
-          次月
-          <ChevronRight className="h-4 w-4" />
+          次月 →
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleNavigate("TODAY")}
+        >
+          今日
+        </Button>
+      </div>
+      <h2 className="text-lg font-semibold">{label}</h2>
+      <div className="flex items-center gap-2">
+        <Badge variant="default">現場管理モード</Badge>
       </div>
     </div>
   );

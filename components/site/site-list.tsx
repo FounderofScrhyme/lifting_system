@@ -76,17 +76,28 @@ export function SiteList({ selectedDate, onEdit, onRefresh }: SiteListProps) {
 
   const handleToggleCancelled = async (id: string, currentStatus: boolean) => {
     try {
-      await axios.patch(`/api/site/${id}`, {
+      const response = await axios.patch(`/api/site/${id}`, {
         cancelled: !currentStatus,
       });
-      toast.success(
-        currentStatus ? "現場を有効にしました" : "現場をキャンセルしました"
-      );
-      fetchSites();
-      onRefresh();
+
+      if (response.status === 200) {
+        toast.success(
+          currentStatus ? "現場を有効にしました" : "現場をキャンセルしました"
+        );
+        fetchSites();
+        onRefresh();
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (error) {
       console.error("Error toggling site status:", error);
-      toast.error("ステータスの変更に失敗しました");
+
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error || error.message;
+        toast.error(`ステータスの変更に失敗しました: ${errorMessage}`);
+      } else {
+        toast.error("ステータスの変更に失敗しました");
+      }
     }
   };
 

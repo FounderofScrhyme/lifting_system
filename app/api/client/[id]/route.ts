@@ -4,11 +4,12 @@ import prisma from "@/lib/prisma";
 // GET - 特定の取引先取得
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const client = await prisma.client.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!client) {
@@ -28,8 +29,9 @@ export async function GET(
 // PUT - 取引先更新
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const {
@@ -68,11 +70,12 @@ export async function PUT(
 // DELETE - 取引先削除
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     await prisma.client.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Client deleted successfully" });

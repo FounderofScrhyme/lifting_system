@@ -11,6 +11,7 @@ import { useSiteCalendar } from "@/hooks/use-site-calendar";
 import { SiteCalendarToolbar } from "./site-calendar-toolbar";
 import { SiteCalendarEventComponent } from "./site-calendar-event";
 import { SiteCalendarDateCell } from "./site-calendar-date-cell";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 // moment.jsの日本語ロケール設定
 moment.locale("ja", {
@@ -77,84 +78,93 @@ export function SiteCalendar({
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>現場カレンダー</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
-            <p className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-              読み込み中...
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>現場カレンダー</CardTitle>
-        <div className="flex gap-2 mt-2">
-          <Badge variant="outline">全日</Badge>
-          <Badge variant="outline" className="bg-green-100 text-green-800">
-            午前
-          </Badge>
-          <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-            午後
-          </Badge>
-          <Badge variant="outline" className="bg-red-100 text-red-800">
-            中止
-          </Badge>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">現場カレンダー</h3>
+          <p className="text-sm text-muted-foreground">
+            現場のスケジュールを確認・管理します
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[600px]">
-          <Calendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: "100%" }}
-            views={[Views.MONTH]}
-            defaultView={Views.MONTH}
-            date={currentDate}
-            onNavigate={setCurrentDate}
-            onSelectSlot={handleSelectSlot}
-            onSelectEvent={handleSelectEvent}
-            selectable
-            eventPropGetter={eventStyleGetter}
-            dayPropGetter={dateCellStyleGetter}
-            components={{
-              toolbar: (props) => (
-                <SiteCalendarToolbar
-                  {...props}
-                  onNavigate={handleNavigate}
-                  onMonthChange={onMonthChange}
-                />
-              ),
-              event: SiteCalendarEventComponent,
-              dateCellWrapper: SiteCalendarDateCell,
-            }}
-            messages={{
-              today: "今日",
-              previous: "前月",
-              next: "次月",
-              month: "月",
-              week: "週",
-              day: "日",
-              agenda: "予定",
-              date: "日付",
-              time: "時間",
-              event: "現場",
-              noEventsInRange: "この期間に現場はありません",
-              showMore: (total) => `+${total}件表示`,
-            }}
-          />
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <div className="h-[600px]">
+            <Calendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: "100%" }}
+              views={[Views.MONTH]}
+              defaultView={Views.MONTH}
+              date={currentDate}
+              onNavigate={setCurrentDate}
+              onSelectSlot={handleSelectSlot}
+              onSelectEvent={handleSelectEvent}
+              selectable
+              eventPropGetter={eventStyleGetter}
+              dayPropGetter={dateCellStyleGetter}
+              components={{
+                toolbar: (props) => (
+                  <SiteCalendarToolbar
+                    {...props}
+                    onNavigate={handleNavigate}
+                    onMonthChange={onMonthChange}
+                  />
+                ),
+                event: SiteCalendarEventComponent,
+                dateCellWrapper: SiteCalendarDateCell,
+              }}
+              messages={{
+                today: "今日",
+                previous: "前月",
+                next: "次月",
+                month: "月",
+                week: "週",
+                day: "日",
+                agenda: "予定",
+                date: "日付",
+                time: "時間",
+                event: "現場",
+                noEventsInRange: "この期間に現場はありません",
+                showMore: (total) => `+${total}件表示`,
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-blue-500 rounded"></div>
+          <span>全日</span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-green-500 rounded"></div>
+          <span>午前</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+          <span>午後</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-red-500 rounded"></div>
+          <span>中止</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="h-4 w-4" />
+          <span>日付をクリックして現場を選択</span>
+        </div>
+      </div>
+    </div>
   );
 }

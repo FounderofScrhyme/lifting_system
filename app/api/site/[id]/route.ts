@@ -4,11 +4,12 @@ import prisma from "@/lib/prisma";
 // GET - 特定の現場取得
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const site = await prisma.site.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         client: {
           select: {
@@ -36,8 +37,9 @@ export async function GET(
 // PUT - 現場更新
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const {
@@ -55,7 +57,7 @@ export async function PUT(
     } = body;
 
     const site = await prisma.site.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name,
         clientId,
@@ -89,19 +91,20 @@ export async function PUT(
   }
 }
 
-// PATCH - 現場の部分更新（キャンセル状態の切り替えなど）
+// PATCH - 現場ステータス更新
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const { cancelled } = body;
 
     const site = await prisma.site.update({
-      where: { id: params.id },
+      where: { id },
       data: {
-        cancelled: cancelled !== undefined ? cancelled : undefined,
+        cancelled: cancelled,
       },
       include: {
         client: {
@@ -115,9 +118,9 @@ export async function PATCH(
 
     return NextResponse.json(site);
   } catch (error) {
-    console.error("Error updating site:", error);
+    console.error("Error updating site status:", error);
     return NextResponse.json(
-      { error: "Failed to update site" },
+      { error: "Failed to update site status" },
       { status: 500 }
     );
   }
@@ -126,11 +129,12 @@ export async function PATCH(
 // DELETE - 現場削除
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     await prisma.site.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Site deleted successfully" });

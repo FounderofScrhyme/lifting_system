@@ -10,9 +10,7 @@ export default function Home() {
         <CardTitle>LIFTING業務システム</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <p>
-          ログイン、またはサインアップして画面左のメニューバーから機能を選択してください。
-        </p>
+        <p>画面左のメニューバーから機能を選択してください。</p>
       </CardContent>
     </Card>
   );

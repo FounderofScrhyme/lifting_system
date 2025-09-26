@@ -4,11 +4,12 @@ import prisma from "@/lib/prisma";
 // GET - 特定のスタッフ取得
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const staff = await prisma.staff.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!staff) {
@@ -28,8 +29,9 @@ export async function GET(
 // PUT - スタッフ更新
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const {
@@ -49,7 +51,7 @@ export async function PUT(
     } = body;
 
     const staff = await prisma.staff.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name,
         birthDate: new Date(birthDate),
@@ -80,11 +82,12 @@ export async function PUT(
 // DELETE - スタッフ削除
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     await prisma.staff.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Staff deleted successfully" });

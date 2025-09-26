@@ -4,11 +4,12 @@ import prisma from "@/lib/prisma";
 // GET - 特定の売上取得
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const sale = await prisma.sale.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         client: {
           select: {
@@ -36,8 +37,9 @@ export async function GET(
 // PUT - 売上更新
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const { clientId, month, amount, notes } = body;
@@ -61,7 +63,7 @@ export async function PUT(
     }
 
     const sale = await prisma.sale.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         clientId,
         month,
@@ -91,11 +93,12 @@ export async function PUT(
 // DELETE - 売上削除
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     await prisma.sale.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Sale deleted successfully" });

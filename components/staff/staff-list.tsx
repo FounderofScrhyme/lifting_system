@@ -110,7 +110,7 @@ export function StaffList({ onEdit, onRefresh }: StaffListProps) {
   };
 
   const getEmploymentTypeLabel = (type: "SPOT" | "REGULAR") => {
-    return type === "SPOT" ? "スポット" : "社員";
+    return type === "SPOT" ? "スポット" : "レギュラー";
   };
 
   const getEmploymentTypeVariant = (type: "SPOT" | "REGULAR") => {
