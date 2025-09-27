@@ -6,16 +6,27 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "5");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search");
     const skip = (page - 1) * limit;
+
+    // 検索条件を構築
+    const where: any = {};
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: "insensitive",
+      };
+    }
 
     const [staff, total] = await Promise.all([
       prisma.staff.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: "asc" },
       }),
-      prisma.staff.count(),
+      prisma.staff.count({ where }),
     ]);
 
     const totalPages = Math.ceil(total / limit);

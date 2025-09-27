@@ -79,7 +79,43 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("Received sale data:", body);
+
     const { clientId, month, amount, notes } = body;
+
+    // バリデーション
+    if (!clientId) {
+      return NextResponse.json(
+        { error: "取引先IDが必要です" },
+        { status: 400 }
+      );
+    }
+
+    if (!month) {
+      return NextResponse.json(
+        { error: "月の情報が必要です" },
+        { status: 400 }
+      );
+    }
+
+    if (!amount || isNaN(parseInt(amount))) {
+      return NextResponse.json(
+        { error: "有効な売上金額が必要です" },
+        { status: 400 }
+      );
+    }
+
+    // 取引先が存在するかチェック
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
+    });
+
+    if (!client) {
+      return NextResponse.json(
+        { error: "指定された取引先が見つかりません" },
+        { status: 400 }
+      );
+    }
 
     // 同じ取引先・同じ月の売上が既に存在するかチェック
     const existingSale = await prisma.sale.findFirst({
@@ -116,8 +152,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(sale, { status: 201 });
   } catch (error) {
     console.error("Error creating sale:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : "Unknown",
+    });
     return NextResponse.json(
-      { error: "Failed to create sale" },
+      {
+        error: "Failed to create sale",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

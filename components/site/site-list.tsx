@@ -133,7 +133,7 @@ export function SiteList({
 
       // コピーする内容を構築
       const copyText = [
-        `●${formattedDate}の詳細です`,
+        `${formattedDate}の詳細です`,
         "",
         `【現場名】${site.name}`,
         `【開始時間】${formatTime(site.startTime)}`,
@@ -382,6 +382,13 @@ export function SiteList({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {" "}
+                          <DropdownMenuItem
+                            onClick={() => handleCopySiteDetails(site)}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            詳細をコピー
+                          </DropdownMenuItem>
                           {onViewDetail && (
                             <DropdownMenuItem
                               onClick={() => {
@@ -397,12 +404,6 @@ export function SiteList({
                               詳細表示
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem
-                            onClick={() => handleCopySiteDetails(site)}
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            詳細をコピー
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onEdit(site)}>
                             <Edit className="h-4 w-4 mr-2" />
                             編集

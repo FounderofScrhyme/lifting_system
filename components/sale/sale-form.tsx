@@ -129,7 +129,23 @@ export function SaleForm({ onSuccess, initialData, saleId }: SaleFormProps) {
       onSuccess?.();
     } catch (error) {
       console.error("Error saving sale:", error);
-      toast.error("エラーが発生しました");
+
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error details:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+        });
+
+        const errorMessage =
+          error.response?.data?.error ||
+          error.response?.data?.details ||
+          error.message;
+        toast.error(`エラーが発生しました: ${errorMessage}`);
+      } else {
+        toast.error("エラーが発生しました");
+      }
     } finally {
       setIsSubmitting(false);
     }
