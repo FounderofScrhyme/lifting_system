@@ -12,10 +12,14 @@ interface UseSiteCalendarReturn {
   setCurrentDate: (date: Date) => void;
   events: SiteCalendarEvent[];
   handleNavigate: (action: "PREV" | "NEXT" | "TODAY") => void;
-  handleSelectSlot: (start: Date) => void;
+  handleSelectSlot: (slotInfo: {
+    start: Date;
+    end: Date;
+    slots: Date[];
+  }) => void;
   handleSelectEvent: (event: SiteCalendarEvent) => void;
-  getEventStyle: (event: SiteCalendarEvent) => React.CSSProperties;
-  getDateCellStyle: (date: Date) => React.CSSProperties;
+  getEventStyle: (event: SiteCalendarEvent) => { style: React.CSSProperties };
+  getDateCellStyle: (date: Date) => { style: React.CSSProperties } | {};
 }
 
 export function useSiteCalendar({
@@ -72,8 +76,8 @@ export function useSiteCalendar({
   );
 
   const handleSelectSlot = useCallback(
-    (start: Date) => {
-      const dateString = moment(start).format("YYYY-MM-DD");
+    (slotInfo: { start: Date; end: Date; slots: Date[] }) => {
+      const dateString = moment(slotInfo.start).format("YYYY-MM-DD");
       onDateSelect?.(dateString);
     },
     [onDateSelect]
@@ -87,38 +91,39 @@ export function useSiteCalendar({
     [onDateSelect]
   );
 
-  const getEventStyle = useCallback(
-    (event: SiteCalendarEvent): React.CSSProperties => {
-      const site = event.resource;
-      let backgroundColor = "#3174ad";
+  const getEventStyle = useCallback((event: SiteCalendarEvent) => {
+    const site = event.resource;
+    let backgroundColor = "#3174ad";
 
-      if (site.cancelled) {
-        backgroundColor = "#dc3545";
-      } else if (site.siteType === "AM") {
-        backgroundColor = "#28a745";
-      } else if (site.siteType === "PM") {
-        backgroundColor = "#ffc107";
-      }
+    if (site.cancelled) {
+      backgroundColor = "#dc3545";
+    } else if (site.siteType === "AM") {
+      backgroundColor = "#28a745";
+    } else if (site.siteType === "PM") {
+      backgroundColor = "#ffc107";
+    }
 
-      return {
+    return {
+      style: {
         backgroundColor,
         color: "white",
         border: "none",
         borderRadius: "4px",
         padding: "2px 4px",
         fontSize: "12px",
-      };
-    },
-    []
-  );
+      },
+    };
+  }, []);
 
-  const getDateCellStyle = useCallback((date: Date): React.CSSProperties => {
+  const getDateCellStyle = useCallback((date: Date) => {
     const today = new Date();
     const isToday = moment(date).isSame(today, "day");
 
     if (isToday) {
       return {
-        backgroundColor: "#e3f2fd",
+        style: {
+          backgroundColor: "#e3f2fd",
+        },
       };
     }
 
