@@ -58,7 +58,9 @@ export default function SiteDetailPage() {
       setSite(response.data);
     } catch (error) {
       console.error("Error fetching site detail:", error);
-      console.error("Error details:", error.response?.data);
+      if (axios.isAxiosError(error)) {
+        console.error("Error details:", error.response?.data);
+      }
       toast.error("現場情報の取得に失敗しました");
     } finally {
       setLoading(false);
