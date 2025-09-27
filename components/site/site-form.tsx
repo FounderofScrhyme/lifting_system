@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -57,6 +57,7 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<SiteFormData>({
     resolver: zodResolver(siteFormSchema),
@@ -65,8 +66,17 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     },
   });
 
-  const managerPhoneFormat = usePhoneFormat(initialData?.managerPhone || "");
-  const postalCodeFormat = usePostalCodeFormat(initialData?.postalCode || "");
+  const managerPhoneFormat = usePhoneFormat("");
+  const postalCodeFormat = usePostalCodeFormat("");
+
+  // フォーマット関数を安定化（依存配列を空にして安定化）
+  const setManagerPhone = useCallback((value: string) => {
+    managerPhoneFormat.setValue(value);
+  }, []);
+
+  const setPostalCode = useCallback((value: string) => {
+    postalCodeFormat.setValue(value);
+  }, []);
 
   // 取引先データを取得
   useEffect(() => {
@@ -89,30 +99,54 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
   // 初期データを設定
   useEffect(() => {
     if (initialData) {
-      const formatDateForInput = (dateString: string) => {
-        return new Date(dateString).toISOString().split("T")[0];
+      const formatDateForInput = (dateString: string | Date) => {
+        const date =
+          typeof dateString === "string" ? new Date(dateString) : dateString;
+        return date.toISOString().split("T")[0];
       };
 
-      setValue("name", initialData.name);
-      setValue("clientId", initialData.clientId);
-      setValue("date", formatDateForInput(initialData.date));
-      setValue("startTime", initialData.startTime);
-      setValue("siteType", initialData.siteType);
-      setValue("managerName", initialData.managerName || "");
-      setValue("managerPhone", initialData.managerPhone || "");
-      setValue("postalCode", initialData.postalCode || "");
-      setValue("address", initialData.address);
-      setValue("googleMapUrl", initialData.googleMapUrl || "");
-      setValue("notes", initialData.notes || "");
-
+      // まずフォーマット関数の値を設定
       if (initialData.managerPhone) {
-        managerPhoneFormat.setValue(initialData.managerPhone);
+        setManagerPhone(initialData.managerPhone);
       }
       if (initialData.postalCode) {
-        postalCodeFormat.setValue(initialData.postalCode);
+        setPostalCode(initialData.postalCode);
       }
+
+      // 次のレンダリングサイクルでフォームの値を設定
+      setTimeout(() => {
+        setValue("name", initialData.name);
+        setValue("date", formatDateForInput(initialData.date));
+        setValue("startTime", initialData.startTime);
+        setValue("managerName", initialData.managerName || "");
+        setValue("managerPhone", initialData.managerPhone || "");
+        setValue("postalCode", initialData.postalCode || "");
+        setValue("address", initialData.address);
+        setValue("googleMapUrl", initialData.googleMapUrl || "");
+        setValue("notes", initialData.notes || "");
+      }, 10);
+
+      // clientIdとsiteTypeは別のタイミングで設定
+      setTimeout(() => {
+        console.log("Setting clientId:", initialData.clientId);
+        setValue("clientId", initialData.clientId);
+        setValue("siteType", initialData.siteType);
+      }, 20);
+
+      // clientIdを確実に設定するため、追加のタイミングで設定
+      setTimeout(() => {
+        console.log("Re-setting clientId:", initialData.clientId);
+        setValue("clientId", initialData.clientId);
+      }, 50);
+    } else {
+      // 新規作成時はフォームをリセット
+      reset({
+        siteType: SiteType.FULL,
+      });
+      setManagerPhone("");
+      setPostalCode("");
     }
-  }, [initialData, setValue, managerPhoneFormat, postalCodeFormat]);
+  }, [initialData, setValue, reset]);
 
   const handlePostalCodeChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -196,7 +230,7 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
   };
 
   const siteTypeOptions = [
-    { value: SiteType.FULL, label: "全日" },
+    { value: SiteType.FULL, label: "終日" },
     { value: SiteType.AM, label: "午前" },
     { value: SiteType.PM, label: "午後" },
   ];
@@ -373,7 +407,7 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
                 id="address"
                 value={watch("address") || ""}
                 onChange={(e) => setValue("address", e.target.value)}
-                placeholder="東京都千代田区丸の内1-1-1"
+                placeholder="東京都千代田区..."
               />
               {errors.address && (
                 <p className="text-sm text-red-500">{errors.address.message}</p>

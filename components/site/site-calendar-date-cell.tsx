@@ -4,7 +4,7 @@ import moment from "moment";
 interface SiteCalendarDateCellProps {
   children: ReactNode;
   value: Date;
-  sites?: any[]; // この日付の現場データ
+  sites?: any[];
 }
 
 export function SiteCalendarDateCell({
@@ -18,12 +18,41 @@ export function SiteCalendarDateCell({
   );
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full group">
       {children}
       {daySites.length > 0 && (
-        <div className="absolute top-1 right-1 z-10">
-          <div className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-sm">
-            {daySites.length}
+        <div className="absolute inset-0 pt-8 px-1">
+          <div className="h-full overflow-hidden">
+            {daySites.length <= 4 ? (
+              <div className="space-y-1">
+                {daySites.map((site, index) => (
+                  <div
+                    key={index}
+                    className="site-name-item text-xs bg-green-100 text-green-700 px-2 py-1 rounded border border-green-300 truncate transition-all duration-200 ease-in-out cursor-pointer hover:bg-green-100 hover:scale-105 hover:z-10 relative"
+                    title={site.name}
+                  >
+                    {site.name}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-1">
+                {daySites.slice(0, 8).map((site, index) => (
+                  <div
+                    key={index}
+                    className="site-name-item text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded border  truncate transition-all duration-200 ease-in-out cursor-pointer hover:bg-green-100 hover:scale-105 hover:z-10 relative"
+                    title={site.name}
+                  >
+                    {site.name}
+                  </div>
+                ))}
+                {daySites.length > 8 && (
+                  <div className="col-span-2 text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded text-center">
+                    +{daySites.length - 8}件
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -187,7 +187,7 @@ export function SiteList({ selectedDate, onEdit, onRefresh }: SiteListProps) {
                 <TableRow>
                   <TableHead>現場名</TableHead>
                   <TableHead>取引先</TableHead>
-                  <TableHead>時間</TableHead>
+                  <TableHead>開始時間</TableHead>
                   <TableHead>タイプ</TableHead>
                   <TableHead>担当者</TableHead>
                   <TableHead>住所</TableHead>

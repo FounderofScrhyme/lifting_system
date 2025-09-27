@@ -31,16 +31,16 @@ export function SiteCalendarToolbar({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleNavigate("NEXT")}
+          onClick={() => handleNavigate("TODAY")}
         >
-          次月 →
+          今月
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleNavigate("TODAY")}
+          onClick={() => handleNavigate("NEXT")}
         >
-          今日
+          次月 →
         </Button>
       </div>
       <h2 className="text-lg font-semibold">{label}</h2>
