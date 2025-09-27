@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-// GET - 特定の現場取得
+// GET - 特定の現場取得（振り分け済スタッフ情報も含む）
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  console.log("Fetching site with ID:", id);
   try {
     const site = await prisma.site.findUnique({
       where: { id },
@@ -17,18 +18,51 @@ export async function GET(
             name: true,
           },
         },
+        assignments: {
+          include: {
+            staff: {
+              select: {
+                id: true,
+                name: true,
+                employmentType: true,
+              },
+            },
+          },
+        },
       },
     });
 
     if (!site) {
+      console.log("Site not found for ID:", id);
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
-    return NextResponse.json(site);
+    // 振り分け済スタッフを午前・午後に分ける
+    const amStaff = (site.assignments || [])
+      .filter((assignment) => assignment.timeSlot === "AM")
+      .map((assignment) => assignment.staff);
+
+    const pmStaff = (site.assignments || [])
+      .filter((assignment) => assignment.timeSlot === "PM")
+      .map((assignment) => assignment.staff);
+
+    const response = {
+      ...site,
+      assignedStaff: {
+        am: amStaff,
+        pm: pmStaff,
+      },
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching site:", error);
+    console.error("Error details:", error);
     return NextResponse.json(
-      { error: "Failed to fetch site" },
+      {
+        error: "Failed to fetch site",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

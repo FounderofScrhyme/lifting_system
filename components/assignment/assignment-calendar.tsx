@@ -83,17 +83,17 @@ export function AssignmentCalendar({
         <Button variant="outline" size="sm" onClick={() => onNavigate("PREV")}>
           ← 前月
         </Button>
+        <Button variant="outline" size="sm" onClick={() => onNavigate("TODAY")}>
+          今月
+        </Button>
         <Button variant="outline" size="sm" onClick={() => onNavigate("NEXT")}>
           次月 →
         </Button>
-        <Button variant="outline" size="sm" onClick={() => onNavigate("TODAY")}>
-          今日
-        </Button>
       </div>
       <h2 className="text-lg font-semibold">{label}</h2>
-      <div className="flex items-center gap-2">
+      {/* <div className="flex items-center gap-2">
         <Badge variant="default">振り分け管理モード</Badge>
-      </div>
+      </div> */}
     </div>
   );
 

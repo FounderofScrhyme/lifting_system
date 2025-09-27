@@ -12,7 +12,7 @@ interface AssignmentData {
   siteId: string;
   date: string;
   timeSlot: "AM" | "PM";
-  staffId: string;
+  staffIds: string[];
 }
 
 interface SiteAssignmentCardsProps {
@@ -25,8 +25,14 @@ interface SiteAssignmentCardsProps {
     timeSlot: "AM" | "PM",
     staffId: string
   ) => void;
-  onStaffUnassign: (siteId: string, timeSlot: "AM" | "PM") => void;
+  onStaffUnassign: (
+    siteId: string,
+    timeSlot: "AM" | "PM",
+    staffId: string
+  ) => void;
   loading?: boolean;
+  draggedStaff: string | null;
+  setDraggedStaff: (staffId: string | null) => void;
 }
 
 export const SiteAssignmentCards = memo(function SiteAssignmentCards({
@@ -37,13 +43,13 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
   onStaffAssign,
   onStaffUnassign,
   loading = false,
+  draggedStaff,
+  setDraggedStaff,
 }: SiteAssignmentCardsProps) {
-  const [draggedStaff, setDraggedStaff] = useState<string | null>(null);
-
   const getSiteTypeLabel = (type: string) => {
     switch (type) {
       case "FULL":
-        return "全日";
+        return "終日";
       case "AM":
         return "午前";
       case "PM":
@@ -78,6 +84,19 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
     return staffMember ? staffMember.name : `スタッフ${staffId.slice(-4)}`;
   };
 
+  const isStaffAssigned = (
+    siteId: string,
+    timeSlot: "AM" | "PM",
+    staffId: string
+  ) => {
+    const assignment = getAssignedStaff(siteId, timeSlot);
+    return assignment &&
+      assignment.staffIds &&
+      Array.isArray(assignment.staffIds)
+      ? assignment.staffIds.includes(staffId)
+      : false;
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -90,7 +109,10 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
   ) => {
     e.preventDefault();
     const staffId = e.dataTransfer.getData("text/plain");
-    if (staffId && staffId !== draggedStaff) {
+    console.log("Drop event:", { staffId, siteId, timeSlot, draggedStaff });
+
+    if (staffId && !isStaffAssigned(siteId, timeSlot, staffId)) {
+      console.log("Assigning staff:", { siteId, timeSlot, staffId });
       onStaffAssign(siteId, timeSlot, staffId);
     }
     setDraggedStaff(null);
@@ -124,23 +146,39 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
           </div>
         </div>
 
-        <div className="min-h-[40px] p-2 border-2 border-dashed border-muted rounded-md transition-colors hover:border-primary/50">
-          {assignedStaff ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  {getStaffName(assignedStaff.staffId)}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onStaffUnassign(site.id, timeSlot)}
-                className="h-6 w-6 p-0"
-              >
-                <X className="h-3 w-3" />
-              </Button>
+        <div
+          className="min-h-[40px] p-2 border-2 border-dashed border-muted rounded-md transition-colors hover:border-primary/50"
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, site.id, timeSlot)}
+        >
+          {assignedStaff &&
+          assignedStaff.staffIds &&
+          Array.isArray(assignedStaff.staffIds) &&
+          assignedStaff.staffIds.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              {assignedStaff.staffIds.map((staffId) => (
+                <div
+                  key={staffId}
+                  className="flex items-center justify-between"
+                  onDragOver={(e) => e.stopPropagation()}
+                  onDrop={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded-md gap-1 flex-1 min-w-0">
+                    <User className="h-3 w-3 text-primary flex-shrink-0" />
+                    <span className="text-xs font-medium text-primary truncate">
+                      {getStaffName(staffId)}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onStaffUnassign(site.id, timeSlot, staffId)}
+                    className="h-5 w-5 p-0 flex-shrink-0"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </Button>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">

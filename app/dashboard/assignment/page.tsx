@@ -17,7 +17,7 @@ interface AssignmentData {
   siteId: string;
   date: string;
   timeSlot: "AM" | "PM";
-  staffId: string;
+  staffIds: string[];
 }
 
 export default function AssignmentPage() {
@@ -28,6 +28,7 @@ export default function AssignmentPage() {
   const [assignments, setAssignments] = useState<AssignmentData[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [draggedStaff, setDraggedStaff] = useState<string | null>(null);
 
   const handleDateSelect = async (date: string) => {
     setSelectedDate(date);
@@ -59,7 +60,29 @@ export default function AssignmentPage() {
 
       setAmSites(am);
       setPmSites(pm);
-      setAssignments(assignmentsResponse.data.data);
+
+      // 割り当てデータを変換
+      const rawAssignments = assignmentsResponse.data.data;
+      const groupedAssignments: AssignmentData[] = [];
+
+      // 現場と時間帯ごとにグループ化
+      const assignmentMap = new Map<string, AssignmentData>();
+
+      rawAssignments.forEach((assignment: any) => {
+        const key = `${assignment.site.id}_${assignment.timeSlot}`;
+        if (assignmentMap.has(key)) {
+          assignmentMap.get(key)!.staffIds.push(assignment.staff.id);
+        } else {
+          assignmentMap.set(key, {
+            siteId: assignment.site.id,
+            date: assignment.date,
+            timeSlot: assignment.timeSlot,
+            staffIds: [assignment.staff.id],
+          });
+        }
+      });
+
+      setAssignments(Array.from(assignmentMap.values()));
     } catch (error) {
       console.error("Error fetching assignment data:", error);
       toast.error("データの取得に失敗しました");
@@ -73,47 +96,165 @@ export default function AssignmentPage() {
     timeSlot: "AM" | "PM",
     staffId: string
   ) => {
+    console.log("handleStaffAssign called:", { siteId, timeSlot, staffId });
     setAssignments((prev) => {
-      // 既存の割り当てを削除
-      const filtered = prev.filter(
+      console.log("Current assignments:", prev);
+      // 既存の割り当てを探す
+      const existingAssignment = prev.find(
         (assignment) =>
-          !(assignment.siteId === siteId && assignment.timeSlot === timeSlot)
+          assignment.siteId === siteId && assignment.timeSlot === timeSlot
       );
 
-      // 新しい割り当てを追加
-      return [...filtered, { siteId, date: selectedDate, timeSlot, staffId }];
+      if (existingAssignment) {
+        // 既存の割り当てにスタッフを追加
+        if (
+          existingAssignment.staffIds &&
+          Array.isArray(existingAssignment.staffIds) &&
+          !existingAssignment.staffIds.includes(staffId)
+        ) {
+          const updated = prev.map((assignment) =>
+            assignment.siteId === siteId && assignment.timeSlot === timeSlot
+              ? {
+                  ...assignment,
+                  staffIds: [...(assignment.staffIds || []), staffId],
+                }
+              : assignment
+          );
+          return updated;
+        }
+        return prev;
+      } else {
+        // 新しい割り当てを作成
+        console.log("Creating new assignment:", { siteId, timeSlot, staffId });
+        const newAssignments = [
+          ...prev,
+          { siteId, date: selectedDate, timeSlot, staffIds: [staffId] },
+        ];
+        console.log("New assignments:", newAssignments);
+        return newAssignments;
+      }
     });
   };
 
-  const handleStaffUnassign = (siteId: string, timeSlot: "AM" | "PM") => {
-    setAssignments((prev) =>
-      prev.filter(
+  const handleStaffUnassign = (
+    siteId: string,
+    timeSlot: "AM" | "PM",
+    staffId: string
+  ) => {
+    setAssignments((prev) => {
+      const assignment = prev.find(
         (assignment) =>
-          !(assignment.siteId === siteId && assignment.timeSlot === timeSlot)
-      )
-    );
+          assignment.siteId === siteId && assignment.timeSlot === timeSlot
+      );
+
+      if (
+        assignment &&
+        assignment.staffIds &&
+        Array.isArray(assignment.staffIds)
+      ) {
+        const updatedStaffIds = assignment.staffIds.filter(
+          (id) => id !== staffId
+        );
+
+        if (updatedStaffIds.length === 0) {
+          // スタッフが0人になったら割り当てを削除
+          return prev.filter(
+            (assignment) =>
+              !(
+                assignment.siteId === siteId && assignment.timeSlot === timeSlot
+              )
+          );
+        } else {
+          // スタッフを削除して更新
+          return prev.map((assignment) =>
+            assignment.siteId === siteId && assignment.timeSlot === timeSlot
+              ? { ...assignment, staffIds: updatedStaffIds }
+              : assignment
+          );
+        }
+      }
+      return prev;
+    });
   };
 
   const handleConfirm = async () => {
     try {
       setSaving(true);
 
-      await axios.post("/api/assignment/confirm", {
+      console.log("Confirming assignments:", {
         date: selectedDate,
         assignments: assignments,
       });
 
+      // バリデーション
+      if (!selectedDate) {
+        toast.error("日付が選択されていません");
+        return;
+      }
+
+      if (assignments.length === 0) {
+        toast.error("割り当てがありません");
+        return;
+      }
+
+      const response = await axios.post(
+        "/api/assignment/confirm",
+        {
+          date: selectedDate,
+          assignments: assignments,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 10000, // 10秒のタイムアウト
+        }
+      );
+
+      console.log("Assignment confirm response:", response.data);
       toast.success("人員配置を確定しました");
     } catch (error) {
       console.error("Error confirming assignments:", error);
-      toast.error("人員配置の確定に失敗しました");
+
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error details:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+        });
+
+        if (error.response?.status === 404) {
+          toast.error("APIエンドポイントが見つかりません");
+        } else if (error.response?.status === 500) {
+          const errorMessage =
+            error.response?.data?.details ||
+            error.response?.data?.error ||
+            "サーバーエラーが発生しました";
+          toast.error(`サーバーエラー: ${errorMessage}`);
+        } else if (error.code === "ECONNABORTED") {
+          toast.error("リクエストがタイムアウトしました");
+        } else if (error.code === "NETWORK_ERROR") {
+          toast.error("ネットワークエラーが発生しました");
+        } else {
+          toast.error(
+            `エラーが発生しました: ${
+              error.response?.statusText || error.message
+            }`
+          );
+        }
+      } else if (error instanceof Error) {
+        toast.error(`エラーが発生しました: ${error.message}`);
+      } else {
+        toast.error("予期しないエラーが発生しました");
+      }
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-2">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">振り分け管理</h1>
@@ -147,7 +288,8 @@ export default function AssignmentPage() {
                 staff={availableStaff}
                 assignments={assignments}
                 onStaffAssign={handleStaffAssign}
-                onStaffUnassign={handleStaffUnassign}
+                draggedStaff={draggedStaff}
+                setDraggedStaff={setDraggedStaff}
               />
 
               {/* 現場割り当てカード */}
@@ -159,6 +301,8 @@ export default function AssignmentPage() {
                 onStaffAssign={handleStaffAssign}
                 onStaffUnassign={handleStaffUnassign}
                 loading={loading}
+                draggedStaff={draggedStaff}
+                setDraggedStaff={setDraggedStaff}
               />
 
               {/* 確定ボタン */}

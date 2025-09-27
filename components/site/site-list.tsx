@@ -28,6 +28,8 @@ import {
   Clock,
   User,
   Phone,
+  Eye,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,10 +37,18 @@ interface SiteListProps {
   selectedDate: string;
   onEdit: (site: Site) => void;
   onRefresh: () => void;
+  onViewDetail?: (site: Site) => void;
 }
 
-export function SiteList({ selectedDate, onEdit, onRefresh }: SiteListProps) {
+export function SiteList({
+  selectedDate,
+  onEdit,
+  onRefresh,
+  onViewDetail,
+}: SiteListProps) {
   const [sites, setSites] = useState<Site[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,13 +60,99 @@ export function SiteList({ selectedDate, onEdit, onRefresh }: SiteListProps) {
   const fetchSites = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/site?date=${selectedDate}`);
-      setSites(response.data.data);
+      // 並列でデータを取得
+      const [sitesResponse, assignmentsResponse, staffResponse] =
+        await Promise.all([
+          axios.get(`/api/site?date=${selectedDate}`),
+          axios.get(`/api/assignment/assignments?date=${selectedDate}`),
+          axios.get(`/api/staff`),
+        ]);
+
+      setSites(sitesResponse.data.data);
+      setAssignments(assignmentsResponse.data.data);
+      setStaff(staffResponse.data.data);
+
+      // デバッグ用ログ
+      console.log("Fetched data:", {
+        sites: sitesResponse.data.data.length,
+        assignments: assignmentsResponse.data.data.length,
+        staff: staffResponse.data.data.length,
+      });
     } catch (error) {
       console.error("Error fetching sites:", error);
       toast.error("現場一覧の取得に失敗しました");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 現場に割り当てられたスタッフの名前を取得
+  const getAssignedStaffNames = (siteId: string) => {
+    const siteAssignments = assignments.filter(
+      (assignment) => assignment.site.id === siteId
+    );
+
+    const staffNames = siteAssignments
+      .map((assignment) => {
+        // assignment.staff.id または assignment.staffId を確認
+        const staffId = assignment.staff?.id || assignment.staffId;
+        if (!staffId) {
+          console.warn("Staff ID not found in assignment:", assignment);
+          return null;
+        }
+
+        const staffMember = staff.find((s) => s.id === staffId);
+        if (!staffMember) {
+          console.warn("Staff member not found for ID:", staffId);
+          return null;
+        }
+
+        return staffMember.name;
+      })
+      .filter((name) => name !== null); // null値を除外
+
+    return staffNames;
+  };
+
+  // 現場詳細をコピーする関数
+  const handleCopySiteDetails = async (site: Site) => {
+    try {
+      // 振り分けられたスタッフの名前を取得
+      const assignedStaffNames = getAssignedStaffNames(site.id);
+
+      // Google Mapリンクを生成
+      const googleMapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        site.address
+      )}`;
+
+      // 日付をフォーマット（年月日のみ）
+      const formattedDate = new Date(selectedDate).toLocaleDateString("ja-JP", {
+        month: "long",
+        day: "numeric",
+      });
+
+      // コピーする内容を構築
+      const copyText = [
+        `●${formattedDate}の詳細です`,
+        "",
+        `【現場名】${site.name}`,
+        `【開始時間】${formatTime(site.startTime)}`,
+        `【スタッフ】${
+          assignedStaffNames.length > 0
+            ? assignedStaffNames.join("、")
+            : "未割り当て"
+        }`,
+        `【住所】${site.address}`,
+        `【Google Map】${googleMapLink}`,
+        `【備考】${site.notes || "なし"}`,
+      ].join("\n");
+
+      // クリップボードにコピー
+      await navigator.clipboard.writeText(copyText);
+      toast.success("現場詳細をコピーしました");
+    } catch (error) {
+      console.error("Error copying site details:", error);
+      toast.error("コピーに失敗しました");
     }
   };
 
@@ -188,16 +284,17 @@ export function SiteList({ selectedDate, onEdit, onRefresh }: SiteListProps) {
                   <TableHead>現場名</TableHead>
                   <TableHead>取引先</TableHead>
                   <TableHead>開始時間</TableHead>
-                  <TableHead>タイプ</TableHead>
-                  <TableHead>担当者</TableHead>
+                  <TableHead>振り分けスタッフ</TableHead>
                   <TableHead>住所</TableHead>
-                  <TableHead>ステータス</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sites.map((site) => (
-                  <TableRow key={site.id}>
+                  <TableRow
+                    key={site.id}
+                    className={site.cancelled ? "opacity-50" : ""}
+                  >
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-gray-500" />
@@ -212,29 +309,60 @@ export function SiteList({ selectedDate, onEdit, onRefresh }: SiteListProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getSiteTypeColor(site.siteType)}>
-                        {getSiteTypeLabel(site.siteType)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {site.managerName ? (
-                        <div className="flex items-center gap-1">
-                          <User className="h-4 w-4 text-gray-500" />
-                          <div>
-                            <div className="font-medium">
-                              {site.managerName}
-                            </div>
-                            {site.managerPhone && (
-                              <div className="flex items-center gap-1 text-sm text-gray-500">
-                                <Phone className="h-3 w-3" />
-                                {site.managerPhone}
+                      {(() => {
+                        try {
+                          const assignedStaffNames = getAssignedStaffNames(
+                            site.id
+                          );
+                          console.log(
+                            `Staff names for site ${site.id}:`,
+                            assignedStaffNames
+                          );
+
+                          if (assignedStaffNames.length > 0) {
+                            const maxDisplay = 4;
+                            const displayNames = assignedStaffNames.slice(
+                              0,
+                              maxDisplay
+                            );
+                            const remainingCount =
+                              assignedStaffNames.length - maxDisplay;
+
+                            return (
+                              <div className="flex flex-wrap gap-1">
+                                {displayNames.map((name, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="outline"
+                                    className="text-xs"
+                                  >
+                                    {name}
+                                  </Badge>
+                                ))}
+                                {remainingCount > 0 && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs bg-gray-100 text-gray-600"
+                                  >
+                                    他{remainingCount}名
+                                  </Badge>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">-</span>
-                      )}
+                            );
+                          } else {
+                            return (
+                              <span className="text-gray-500">未割り当て</span>
+                            );
+                          }
+                        } catch (error) {
+                          console.error(
+                            "Error getting staff names for site:",
+                            site.id,
+                            error
+                          );
+                          return <span className="text-red-500">エラー</span>;
+                        }
+                      })()}
                     </TableCell>
                     <TableCell>
                       <div className="max-w-xs">
@@ -247,18 +375,6 @@ export function SiteList({ selectedDate, onEdit, onRefresh }: SiteListProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={site.cancelled ? "destructive" : "default"}
-                        className={
-                          site.cancelled
-                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                        }
-                      >
-                        {site.cancelled ? "キャンセル" : "有効"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
@@ -266,6 +382,27 @@ export function SiteList({ selectedDate, onEdit, onRefresh }: SiteListProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {onViewDetail && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                console.log(
+                                  "View detail clicked for site:",
+                                  site.id,
+                                  site.name
+                                );
+                                onViewDetail(site);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              詳細表示
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleCopySiteDetails(site)}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            詳細をコピー
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onEdit(site)}>
                             <Edit className="h-4 w-4 mr-2" />
                             編集

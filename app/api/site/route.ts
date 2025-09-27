@@ -66,6 +66,13 @@ export async function GET(request: NextRequest) {
       prisma.site.count({ where }),
     ]);
 
+    console.log(
+      "Found sites:",
+      sites.length,
+      "with IDs:",
+      sites.map((s) => s.id)
+    );
+
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({

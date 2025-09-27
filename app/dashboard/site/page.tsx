@@ -10,8 +10,10 @@ import { SiteCalendar } from "@/components/site/site-calendar";
 import { useSiteData } from "@/hooks/use-site-data";
 import { Site } from "@/types/site";
 import { ErrorHandler } from "@/lib/error-handler";
+import { useRouter } from "next/navigation";
 
 export default function SitePage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("calendar");
   const [editingSite, setEditingSite] = useState<Site | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -48,6 +50,14 @@ export default function SitePage() {
   const handleCalendarMonthChange = useCallback(async () => {
     await refreshSites();
   }, [refreshSites]);
+
+  const handleViewDetail = useCallback(
+    (site: Site) => {
+      console.log("Navigating to site detail for ID:", site.id);
+      router.push(`/dashboard/site/${site.id}`);
+    },
+    [router]
+  );
 
   if (error) {
     return (
@@ -98,6 +108,7 @@ export default function SitePage() {
               selectedDate={selectedDate}
               onEdit={handleEdit}
               onRefresh={refreshSites}
+              onViewDetail={handleViewDetail}
             />
           ) : (
             <div className="text-center py-8">

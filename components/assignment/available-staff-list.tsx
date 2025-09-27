@@ -11,7 +11,7 @@ interface AssignmentData {
   siteId: string;
   date: string;
   timeSlot: "AM" | "PM";
-  staffId: string;
+  staffIds: string[];
 }
 
 interface AvailableStaffListProps {
@@ -22,17 +22,17 @@ interface AvailableStaffListProps {
     timeSlot: "AM" | "PM",
     staffId: string
   ) => void;
-  onStaffUnassign: (siteId: string, timeSlot: "AM" | "PM") => void;
+  draggedStaff: string | null;
+  setDraggedStaff: (staffId: string | null) => void;
 }
 
 export function AvailableStaffList({
   staff,
   assignments,
   onStaffAssign,
-  onStaffUnassign,
+  draggedStaff,
+  setDraggedStaff,
 }: AvailableStaffListProps) {
-  const [draggedStaff, setDraggedStaff] = useState<string | null>(null);
-
   const getEmploymentTypeLabel = (type: string) => {
     switch (type) {
       case "REGULAR":
@@ -56,10 +56,18 @@ export function AvailableStaffList({
   };
 
   const isStaffAssigned = (staffId: string) => {
-    return assignments.some((assignment) => assignment.staffId === staffId);
+    // スタッフが既に割り当てられているかどうかをチェック
+    // ただし、複数の現場に配置することは許可する
+    return assignments.some(
+      (assignment) =>
+        assignment.staffIds &&
+        Array.isArray(assignment.staffIds) &&
+        assignment.staffIds.includes(staffId)
+    );
   };
 
   const handleDragStart = (e: React.DragEvent, staffId: string) => {
+    console.log("Drag start:", staffId);
     setDraggedStaff(staffId);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", staffId);
@@ -110,17 +118,17 @@ export function AvailableStaffList({
             return (
               <div
                 key={member.id}
-                draggable={!isAssigned}
+                draggable={true}
                 onDragStart={(e) => handleDragStart(e, member.id)}
                 onDragEnd={handleDragEnd}
                 className={`
                   inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-all cursor-move
                   ${
                     isAssigned
-                      ? "bg-muted/50 border-muted opacity-50 cursor-not-allowed"
+                      ? "bg-blue-50 border-blue-200 hover:border-blue-300 dark:bg-blue-900/20 dark:border-blue-800"
                       : "bg-background border-border hover:border-primary/50"
                   }
-                  ${isDragging ? "opacity-50" : ""}
+                  ${isDragging ? "opacity-50 scale-95" : "hover:scale-105"}
                 `}
               >
                 <span className="font-medium">{member.name}</span>
@@ -133,7 +141,9 @@ export function AvailableStaffList({
                   {getEmploymentTypeLabel(member.employmentType)}
                 </Badge>
                 {isAssigned && (
-                  <Clock className="h-3 w-3 text-muted-foreground" />
+                  <Badge variant="secondary" className="text-xs px-1 py-0">
+                    配置済み
+                  </Badge>
                 )}
               </div>
             );
