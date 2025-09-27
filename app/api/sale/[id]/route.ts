@@ -50,7 +50,7 @@ export async function PUT(
         clientId,
         month,
         id: {
-          not: params.id,
+          not: id,
         },
       },
     });

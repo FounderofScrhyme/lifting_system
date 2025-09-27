@@ -45,7 +45,7 @@ export async function PUT(
     } = body;
 
     const client = await prisma.client.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name,
         phone,
