@@ -27,6 +27,7 @@ model Staff {
   bloodPressure   String?
   lastCheckupDate DateTime?
   employmentType  EmploymentType
+  hidden          Boolean             @default(false)
   notes           String?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
@@ -66,27 +67,25 @@ model Sale {
 }
 
 model Site {
-  id           String            @id @default(cuid())
-  name         String
-  clientId     String
-  date         DateTime
-  startTime    String
-  siteType     SiteType
-  managerName  String?
-  managerPhone String?
-  postalCode   String?
-  address      String
-  googleMapUrl String?
-  cancelled    Boolean           @default(false)
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  notes        String?
-  client       Client            @relation(fields: [clientId], references: [id])
-  assignments  StaffAssignment[]
+  id                  String                    @id @default(cuid())
+  name                String
+  clientId            String
+  date                DateTime
+  startTime           String
+  siteType            SiteType
+  managerName         String?
+  managerPhone        String?
+  postalCode          String?
+  address             String
+  googleMapUrl        String?
+  cancelled           Boolean                   @default(false)
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  notes               String?
+  client              Client                    @relation(fields: [clientId], references: [id])
+  assignments         StaffAssignment[]
   externalAssignments ExternalStaffAssignment[]
 }
-
-
 
 model StaffAvailability {
   id        String           @id @default(cuid())
@@ -121,23 +120,22 @@ model StaffAssignment {
 }
 
 model ExternalStaffAssignment {
-  id                    String   @id @default(cuid())
-  date                  DateTime
-  siteId                String
-  externalStaffName     String
-  externalStaffCompany  String
-  externalStaffNotes    String?
-  timeSlot              TimeSlot @default(AM)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  site                  Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  id                   String   @id @default(cuid())
+  date                 DateTime
+  siteId               String
+  externalStaffName    String
+  externalStaffCompany String
+  externalStaffNotes   String?
+  timeSlot             TimeSlot @default(AM)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  site                 Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   @@unique([siteId, externalStaffName, date, timeSlot])
   @@index([siteId, date])
   @@index([externalStaffName, date])
   @@index([date])
 }
-
 
 enum EmploymentType {
   SPOT
@@ -162,4 +160,64 @@ enum AvailabilityType {
 enum TimeSlot {
   AM
   PM
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
 }
