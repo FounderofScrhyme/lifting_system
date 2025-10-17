@@ -1,7 +1,20 @@
-import { createNextAuthMiddleware } from "nextjs-basic-auth-middleware";
+import { NextRequest, NextResponse } from "next/server";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
-export const middleware = createNextAuthMiddleware();
+export async function middleware(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    return NextResponse.redirect(new URL("/signin", request.url));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ["/(.*)"],
+  runtime: "nodejs",
+  matcher: ["/dashboard"], // Apply middleware to specific routes
 };

@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -35,14 +35,20 @@ export async function signInAction(formData: FormData) {
 }
 
 export async function signOutAction() {
-  try {
-    // 最小限のヘッダーでsignOutを実行
-    await auth.api.signOut({
-      headers: new Headers(),
-    });
-  } catch (error) {
-    console.error("Sign out error:", error);
+  // Headers without cookies to avoid 431 error
+  const headersList = await headers();
+  const cleanHeaders = new Headers();
+
+  // Copy only essential headers, excluding cookies
+  for (const [key, value] of headersList.entries()) {
+    if (key.toLowerCase() !== "cookie") {
+      cleanHeaders.set(key, value);
+    }
   }
 
-  redirect("/");
+  await auth.api.signOut({
+    headers: cleanHeaders,
+  });
+
+  redirect("/signin");
 }

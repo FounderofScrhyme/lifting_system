@@ -13,11 +13,20 @@ export const auth = betterAuth({
   },
   plugins: [nextCookies()],
   session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
+    strategy: "database",
+    expiresIn: 60 * 60 * 2, // 2 hours
+    updateAge: 60 * 30, // 30 minutes
     cookieCache: {
-      enabled: true,
-      maxAge: 60 * 5, // 5 minutes
+      enabled: false, // Disabled to reduce cookie size
+    },
+  },
+  cookies: {
+    sessionToken: {
+      name: "better-auth.session-token",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 2, // 2 hours
     },
   },
   trustedOrigins: ["http://localhost:3000"],
