@@ -43,9 +43,9 @@ export function SiteCalendarToolbar({
         </Button>
       </div>
       <h2 className="text-lg font-semibold">{label}</h2>
-      <div className="flex items-center gap-2">
+      {/* <div className="flex items-center gap-2">
         <Badge variant="default">現場管理モード</Badge>
-      </div>
+      </div> */}
     </div>
   );
 }

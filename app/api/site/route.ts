@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
       postalCode,
       address,
       googleMapUrl,
+      workContent,
       notes,
     } = body;
 
@@ -125,6 +126,7 @@ export async function POST(request: NextRequest) {
         postalCode: postalCode || null,
         address,
         googleMapUrl: googleMapUrl || null,
+        workContent: workContent || null,
         notes: notes || null,
       },
       include: {

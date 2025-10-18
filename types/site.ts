@@ -11,6 +11,7 @@ export interface Site {
   address: string;
   googleMapUrl?: string;
   cancelled: boolean;
+  workContent?: string;
   createdAt: string;
   updatedAt: string;
   notes?: string;
@@ -37,6 +38,7 @@ export interface SiteFormData {
   postalCode?: string;
   address: string;
   googleMapUrl?: string;
+  workContent?: string;
   notes?: string;
 }
 

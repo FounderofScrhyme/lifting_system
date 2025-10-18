@@ -142,14 +142,117 @@ export function SiteList({
             ? assignedStaffNames.join("、")
             : "未割り当て"
         }`,
+        `【作業内容】${site.workContent || "なし"}`,
+        `【備考】${site.notes || "なし"}`,
         `【住所】${site.address}`,
         `【Google Map】${googleMapLink}`,
-        `【備考】${site.notes || "なし"}`,
       ].join("\n");
 
-      // クリップボードにコピー
-      await navigator.clipboard.writeText(copyText);
-      toast.success("現場詳細をコピーしました");
+      // モダンブラウザのClipboard APIを試行
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(copyText);
+          toast.success("現場詳細をコピーしました");
+          return;
+        } catch (clipboardError) {
+          console.warn(
+            "Clipboard API failed, trying fallback:",
+            clipboardError
+          );
+        }
+      }
+
+      // フォールバック: 古いブラウザやスマホ用の方法
+      const textArea = document.createElement("textarea");
+      textArea.value = copyText;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        const successful = document.execCommand("copy");
+        if (successful) {
+          toast.success("現場詳細をコピーしました");
+        } else {
+          throw new Error("execCommand failed");
+        }
+      } catch (fallbackError) {
+        console.error("Fallback copy failed:", fallbackError);
+        // 最後の手段: テキストを表示してユーザーに手動コピーを促す
+        const modal = document.createElement("div");
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.8);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          box-sizing: border-box;
+        `;
+
+        const content = document.createElement("div");
+        content.style.cssText = `
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          max-width: 90%;
+          max-height: 80%;
+          overflow: auto;
+        `;
+
+        const title = document.createElement("h3");
+        title.textContent = "現場詳細をコピーしてください";
+        title.style.cssText =
+          "margin: 0 0 15px 0; font-size: 18px; font-weight: bold;";
+
+        const textarea = document.createElement("textarea");
+        textarea.value = copyText;
+        textarea.style.cssText = `
+          width: 100%;
+          height: 200px;
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 14px;
+          resize: vertical;
+        `;
+
+        const button = document.createElement("button");
+        button.textContent = "閉じる";
+        button.style.cssText = `
+          margin-top: 15px;
+          padding: 10px 20px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        `;
+        button.onclick = () => document.body.removeChild(modal);
+
+        content.appendChild(title);
+        content.appendChild(textarea);
+        content.appendChild(button);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+
+        // テキストエリアを選択
+        textarea.focus();
+        textarea.select();
+
+        toast.info("テキストを手動でコピーしてください");
+      } finally {
+        document.body.removeChild(textArea);
+      }
     } catch (error) {
       console.error("Error copying site details:", error);
       toast.error("コピーに失敗しました");
@@ -286,6 +389,7 @@ export function SiteList({
                   <TableHead>開始時間</TableHead>
                   <TableHead>振り分けスタッフ</TableHead>
                   <TableHead>住所</TableHead>
+                  <TableHead>作業内容</TableHead>
                   <TableHead>備考</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -372,6 +476,17 @@ export function SiteList({
                           <div className="text-xs text-gray-500">
                             〒{site.postalCode}
                           </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-xs">
+                        {site.workContent ? (
+                          <div className="text-sm text-gray-700 line-clamp-2">
+                            {site.workContent}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
                         )}
                       </div>
                     </TableCell>

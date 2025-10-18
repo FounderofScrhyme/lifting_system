@@ -86,6 +86,7 @@ model Site {
   address             String
   googleMapUrl        String?
   cancelled           Boolean                   @default(false)
+  workContent         String?
   createdAt           DateTime                  @default(now())
   updatedAt           DateTime                  @updatedAt
   notes               String?

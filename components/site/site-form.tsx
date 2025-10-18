@@ -36,6 +36,7 @@ const siteFormSchema = z.object({
   postalCode: z.string().optional(),
   address: z.string().min(1, "住所を入力してください"),
   googleMapUrl: z.string().optional(),
+  workContent: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -424,6 +425,18 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
                 placeholder="https://maps.google.com/..."
               />
             </div>
+          </div>
+
+          {/* 作業内容 */}
+          <div className="space-y-2">
+            <Label htmlFor="workContent">作業内容</Label>
+            <Textarea
+              id="workContent"
+              value={watch("workContent") || ""}
+              onChange={(e) => setValue("workContent", e.target.value)}
+              placeholder="実施する作業内容を入力してください"
+              rows={3}
+            />
           </div>
 
           {/* 備考 */}
