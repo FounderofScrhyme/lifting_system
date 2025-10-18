@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import { SiteForm } from "@/components/site/site-form";
 import { SiteList } from "@/components/site/site-list";
 import { SiteCalendar } from "@/components/site/site-calendar";
+import { SiteSearch } from "@/components/site/site-search";
 import { useSiteData } from "@/hooks/use-site-data";
 import { Site } from "@/types/site";
 import { ErrorHandler } from "@/lib/error-handler";
@@ -83,9 +84,10 @@ export default function SitePage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="calendar">カレンダー</TabsTrigger>
           <TabsTrigger value="list">現場一覧</TabsTrigger>
+          <TabsTrigger value="search">現場名検索</TabsTrigger>
           <TabsTrigger value="form">
             <Plus className="h-4 w-4" />
             {editingSite ? "編集" : "新規登録"}
@@ -117,6 +119,14 @@ export default function SitePage() {
               </p>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="search" className="space-y-4">
+          <SiteSearch
+            onEdit={handleEdit}
+            onViewDetail={handleViewDetail}
+            onRefresh={refreshSites}
+          />
         </TabsContent>
 
         <TabsContent value="form" className="space-y-4">

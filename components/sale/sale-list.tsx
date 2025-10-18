@@ -75,12 +75,13 @@ export function SaleList({ onEdit, onRefresh }: SaleListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 5,
+    limit: 10,
     total: 0,
     totalPages: 0,
     hasNext: false,
     hasPrev: false,
   });
+  const [totalAmount, setTotalAmount] = useState(0);
 
   // 検索条件
   const [searchFilters, setSearchFilters] = useState({
@@ -98,7 +99,7 @@ export function SaleList({ onEdit, onRefresh }: SaleListProps) {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: "5",
+        limit: "10",
       });
 
       if (searchFilters.clientId && searchFilters.clientId !== "all") {
@@ -116,6 +117,7 @@ export function SaleList({ onEdit, onRefresh }: SaleListProps) {
       const response = await axios.get(`/api/sale?${params.toString()}`);
       setSales(response.data.data);
       setPagination(response.data.pagination);
+      setTotalAmount(response.data.totalAmount || 0);
     } catch (error) {
       console.error("Error fetching sales:", error);
       toast.error("売上一覧の取得に失敗しました");
@@ -225,7 +227,15 @@ export function SaleList({ onEdit, onRefresh }: SaleListProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>売上一覧 ({pagination.total}件)</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>売上一覧 ({pagination.total}件)</CardTitle>
+          <div className="text-right">
+            <div className="text-sm text-muted-foreground">総売上額</div>
+            <div className="text-2xl font-bold text-green-600">
+              {formatAmount(totalAmount)}
+            </div>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {/* 検索フィルター */}

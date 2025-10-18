@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: [] });
     }
 
-    // 現場名で部分一致検索（重複を除く）
+    // 現場名で部分一致検索（同名の現場を全て取得）
     const sites = await prisma.site.findMany({
       where: {
         name: {
@@ -22,12 +22,17 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         name: true,
-        clientId: true,
+        date: true,
+        startTime: true,
+        siteType: true,
         managerName: true,
         managerPhone: true,
         postalCode: true,
         address: true,
         googleMapUrl: true,
+        cancelled: true,
+        createdAt: true,
+        updatedAt: true,
         client: {
           select: {
             id: true,
@@ -35,11 +40,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      distinct: ["name"],
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 10,
+      orderBy: [{ date: "desc" }, { startTime: "asc" }],
     });
 
     return NextResponse.json({ data: sites });

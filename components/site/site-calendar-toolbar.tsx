@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 interface SiteCalendarToolbarProps {
   label: string;

@@ -286,6 +286,7 @@ export function SiteList({
                   <TableHead>開始時間</TableHead>
                   <TableHead>振り分けスタッフ</TableHead>
                   <TableHead>住所</TableHead>
+                  <TableHead>備考</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -371,6 +372,17 @@ export function SiteList({
                           <div className="text-xs text-gray-500">
                             〒{site.postalCode}
                           </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-xs">
+                        {site.notes ? (
+                          <div className="text-sm text-gray-700 line-clamp-2">
+                            {site.notes}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
                         )}
                       </div>
                     </TableCell>

@@ -33,6 +33,13 @@ model Staff {
   updatedAt       DateTime            @updatedAt
   assignments     StaffAssignment[]
   availabilities  StaffAvailability[]
+
+  // パフォーマンス最適化用インデックス
+  @@index([name])                    // 名前検索用
+  @@index([employmentType])          // 雇用形態フィルタ用
+  @@index([createdAt])               // 作成日時ソート用
+  @@index([name, employmentType])    // 複合検索用
+  @@index([employmentType, createdAt]) // 雇用形態+ソート用
 }
 
 model Client {

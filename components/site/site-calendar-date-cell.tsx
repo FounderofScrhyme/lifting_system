@@ -21,14 +21,14 @@ export function SiteCalendarDateCell({
     <div className="relative w-full h-full group">
       {children}
       {daySites.length > 0 && (
-        <div className="absolute inset-0 pt-8 px-1">
+        <div className="absolute inset-0 pt-8 px-1 z-10">
           <div className="h-full overflow-hidden">
             {daySites.length <= 4 ? (
               <div className="space-y-1">
                 {daySites.map((site, index) => (
                   <div
                     key={index}
-                    className="site-name-item text-xs bg-green-100 text-green-700 px-2 py-1 rounded border border-green-300 truncate transition-all duration-200 ease-in-out cursor-pointer hover:bg-green-100 hover:scale-105 hover:z-10 relative"
+                    className="site-name-item text-xs bg-green-100 text-green-700 px-2 py-1 rounded border border-green-300 truncate transition-all duration-200 ease-in-out cursor-pointer hover:bg-green-200 hover:scale-105 relative z-20"
                     title={site.name}
                   >
                     {site.name}
@@ -40,14 +40,14 @@ export function SiteCalendarDateCell({
                 {daySites.slice(0, 8).map((site, index) => (
                   <div
                     key={index}
-                    className="site-name-item text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded border  truncate transition-all duration-200 ease-in-out cursor-pointer hover:bg-green-100 hover:scale-105 hover:z-10 relative"
+                    className="site-name-item text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded border border-green-300 truncate transition-all duration-200 ease-in-out cursor-pointer hover:bg-green-200 hover:scale-105 relative z-20"
                     title={site.name}
                   >
                     {site.name}
                   </div>
                 ))}
                 {daySites.length > 8 && (
-                  <div className="col-span-2 text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded text-center">
+                  <div className="col-span-2 text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded text-center border border-green-300 relative z-20">
                     +{daySites.length - 8}件
                   </div>
                 )}

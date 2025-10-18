@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "5");
+    const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
     // 検索条件を構築
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const [sales, total] = await Promise.all([
+    const [sales, total, totalAmount] = await Promise.all([
       prisma.sale.findMany({
         where,
         skip,
@@ -51,6 +51,12 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.sale.count({ where }),
+      prisma.sale.aggregate({
+        where,
+        _sum: {
+          amount: true,
+        },
+      }),
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -65,6 +71,7 @@ export async function GET(request: NextRequest) {
         hasNext: page < totalPages,
         hasPrev: page > 1,
       },
+      totalAmount: totalAmount._sum.amount || 0,
     });
   } catch (error) {
     console.error("Error fetching sales:", error);

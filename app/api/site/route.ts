@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (all === "true") {
       const sites = await prisma.site.findMany({
         where,
-        orderBy: { date: "asc" },
+        orderBy: [{ date: "asc" }, { startTime: "asc" }],
         include: {
           client: {
             select: {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { date: "asc" },
+        orderBy: [{ date: "asc" }, { startTime: "asc" }],
         include: {
           client: {
             select: {

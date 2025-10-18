@@ -75,7 +75,7 @@ export function StaffList({ onEdit, onRefresh }: StaffListProps) {
   const fetchStaff = async () => {
     try {
       const response = await axios.get(
-        `/api/staff?page=${currentPage}&limit=5`
+        `/api/staff?page=${currentPage}&limit=10`
       );
       setStaff(response.data.data);
       setPagination(response.data.pagination);
