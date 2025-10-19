@@ -8,9 +8,7 @@ import {
   IconCoinYen,
   IconCreditCardRefund,
   IconDashboard,
-  IconDatabase,
   IconReplaceUser,
-  IconReport,
   IconUserPlus,
 } from "@tabler/icons-react";
 

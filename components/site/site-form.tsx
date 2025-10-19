@@ -50,6 +50,7 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
+  const [clientsError, setClientsError] = useState<string | null>(null);
   const [siteSuggestions, setSiteSuggestions] = useState<SiteSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -84,10 +85,21 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     const fetchClients = async () => {
       try {
         setLoadingClients(true);
+        setClientsError(null);
         const response = await fetch("/api/client");
         const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "取引先データの取得に失敗しました");
+        }
+
         setClients(data.data || []);
       } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "取引先データの取得に失敗しました";
+        setClientsError(errorMessage);
         ErrorHandler.showError(error, "取引先データの取得に失敗しました");
       } finally {
         setLoadingClients(false);
@@ -97,9 +109,9 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     fetchClients();
   }, []);
 
-  // 初期データを設定
+  // 初期データを設定（取引先データの読み込み完了を待つ）
   useEffect(() => {
-    if (initialData) {
+    if (initialData && !loadingClients && clients.length > 0) {
       const formatDateForInput = (dateString: string | Date) => {
         const date =
           typeof dateString === "string" ? new Date(dateString) : dateString;
@@ -114,31 +126,21 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
         setPostalCode(initialData.postalCode);
       }
 
-      // 次のレンダリングサイクルでフォームの値を設定
-      setTimeout(() => {
-        setValue("name", initialData.name);
-        setValue("date", formatDateForInput(initialData.date));
-        setValue("startTime", initialData.startTime);
-        setValue("managerName", initialData.managerName || "");
-        setValue("managerPhone", initialData.managerPhone || "");
-        setValue("postalCode", initialData.postalCode || "");
-        setValue("address", initialData.address);
-        setValue("googleMapUrl", initialData.googleMapUrl || "");
-        setValue("notes", initialData.notes || "");
-      }, 10);
+      // フォームの値を設定
+      setValue("name", initialData.name);
+      setValue("date", formatDateForInput(initialData.date));
+      setValue("startTime", initialData.startTime);
+      setValue("managerName", initialData.managerName || "");
+      setValue("managerPhone", initialData.managerPhone || "");
+      setValue("postalCode", initialData.postalCode || "");
+      setValue("address", initialData.address);
+      setValue("googleMapUrl", initialData.googleMapUrl || "");
+      setValue("workContent", initialData.workContent || "");
+      setValue("notes", initialData.notes || "");
+      setValue("clientId", initialData.clientId);
+      setValue("siteType", initialData.siteType);
 
-      // clientIdとsiteTypeは別のタイミングで設定
-      setTimeout(() => {
-        console.log("Setting clientId:", initialData.clientId);
-        setValue("clientId", initialData.clientId);
-        setValue("siteType", initialData.siteType);
-      }, 20);
-
-      // clientIdを確実に設定するため、追加のタイミングで設定
-      setTimeout(() => {
-        console.log("Re-setting clientId:", initialData.clientId);
-        setValue("clientId", initialData.clientId);
-      }, 50);
+      console.log("Initial data set with clientId:", initialData.clientId);
     } else {
       // 新規作成時はフォームをリセット
       reset({
@@ -147,7 +149,15 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
       setManagerPhone("");
       setPostalCode("");
     }
-  }, [initialData, setValue, reset]);
+  }, [
+    initialData,
+    loadingClients,
+    clients,
+    setValue,
+    setManagerPhone,
+    setPostalCode,
+    reset,
+  ]);
 
   const handlePostalCodeChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -236,6 +246,70 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     { value: SiteType.PM, label: "午後" },
   ];
 
+  // 取引先データの読み込み中はローディング表示
+  if (loadingClients) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{initialData ? "現場情報編集" : "現場登録"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                取引先データを読み込み中...
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 取引先データの取得に失敗した場合
+  if (clientsError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{initialData ? "現場情報編集" : "現場登録"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="text-red-500 mb-4">
+                <svg
+                  className="w-12 h-12 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <p className="text-sm text-red-600 mb-4">{clientsError}</p>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="mr-2"
+              >
+                再読み込み
+              </Button>
+              <Button variant="outline" onClick={onCancel}>
+                キャンセル
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -255,15 +329,15 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
                   placeholder="○○様邸"
                 />
                 {showSuggestions && siteSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                     {siteSuggestions.map((site) => (
                       <div
                         key={site.id}
-                        className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0"
                         onClick={() => handleSuggestionSelect(site)}
                       >
                         <div className="font-medium text-sm">{site.name}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-gray-500">
                           {site.client.name} -{" "}
                           {site.managerName || "担当者未設定"}
                         </div>

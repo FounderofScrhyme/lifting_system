@@ -23,6 +23,9 @@ export function SiteCalendarEventComponent({
         <Badge variant={getEventVariant()} className="text-xs px-1 py-0">
           {site.name}
         </Badge>
+        <span className="text-xs text-gray-600 truncate">
+          ({site.client?.name || "工務店不明"})
+        </span>
       </div>
     </div>
   );

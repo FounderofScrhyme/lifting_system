@@ -98,7 +98,7 @@ export function SiteCalendar({
       {/* カレンダー */}
       <Card>
         <CardContent className="p-0">
-          <div className="h-[900px] [&_.rbc-month-view]:h-full [&_.rbc-date-cell]:min-h-[180px] [&_.rbc-date-cell]:h-auto [&_.rbc-date-cell]:relative [&_.rbc-date-cell]:p-1 [&_.rbc-date-cell]:border [&_.rbc-date-cell]:border-gray-200 [&_.rbc-date-cell]:transition-all [&_.rbc-date-cell]:duration-200 [&_.rbc-date-cell]:ease-in-out [&_.rbc-date-cell:hover]:bg-gray-100 [&_.rbc-date-cell.rbc-today]:bg-gray-50 [&_.rbc-date-cell.rbc-off-range-bg]:bg-gray-50 [&_.rbc-date-cell_.rbc-date-content]:h-full [&_.rbc-date-cell_.rbc-date-content]:flex [&_.rbc-date-cell_.rbc-date-content]:flex-col [&_.rbc-date-cell_.rbc-date-content]:p-0 [&_.rbc-date-cell_.rbc-date-number]:absolute [&_.rbc-date-cell_.rbc-date-number]:top-1 [&_.rbc-date-cell_.rbc-date-number]:left-1 [&_.rbc-date-cell_.rbc-date-number]:z-20 [&_.rbc-date-cell_.rbc-date-number]:font-semibold [&_.rbc-date-cell_.rbc-date-number]:text-sm [&_.rbc-date-cell_.rbc-date-number]:text-gray-700 [&_.rbc-date-cell.rbc-today_.rbc-date-number]:bg-blue-500 [&_.rbc-date-cell.rbc-today_.rbc-date-number]:text-white [&_.rbc-date-cell.rbc-today_.rbc-date-number]:rounded-full [&_.rbc-date-cell.rbc-today_.rbc-date-number]:w-6 [&_.rbc-date-cell.rbc-today_.rbc-date-number]:h-6 [&_.rbc-date-cell.rbc-today_.rbc-date-number]:flex [&_.rbc-date-cell.rbc-today_.rbc-date-number]:items-center [&_.rbc-date-cell.rbc-today_.rbc-date-number]:justify-center [&_.rbc-date-cell.rbc-today_.rbc-date-number]:text-xs [&_.rbc-date-cell:hover_.site-name-item]:bg-green-100 [&_.rbc-date-cell:hover_.site-name-item]:border-green-500 [&_.rbc-date-cell:hover_.site-name-item]:text-green-800 [&_.rbc-date-cell:hover_.site-name-item]:font-medium [&_.rbc-date-cell:hover_.site-name-item]:scale-105">
+          <div className="h-[900px] [&_.rbc-month-view]:h-full [&_.rbc-date-cell]:min-h-[200px] [&_.rbc-date-cell]:h-auto [&_.rbc-date-cell]:relative [&_.rbc-date-cell]:p-1 [&_.rbc-date-cell]:border [&_.rbc-date-cell]:border-gray-200 [&_.rbc-date-cell]:transition-all [&_.rbc-date-cell]:duration-200 [&_.rbc-date-cell]:ease-in-out [&_.rbc-date-cell:hover]:bg-gray-100 [&_.rbc-date-cell.rbc-today]:bg-gray-50 [&_.rbc-date-cell.rbc-off-range-bg]:bg-gray-50 [&_.rbc-date-cell_.rbc-date-content]:h-full [&_.rbc-date-cell_.rbc-date-content]:flex [&_.rbc-date-cell_.rbc-date-content]:flex-col [&_.rbc-date-cell_.rbc-date-content]:p-0 [&_.rbc-date-cell_.rbc-date-number]:absolute [&_.rbc-date-cell_.rbc-date-number]:top-1 [&_.rbc-date-cell_.rbc-date-number]:left-1 [&_.rbc-date-cell_.rbc-date-number]:z-20 [&_.rbc-date-cell_.rbc-date-number]:font-semibold [&_.rbc-date-cell_.rbc-date-number]:text-sm [&_.rbc-date-cell_.rbc-date-number]:text-gray-700 [&_.rbc-date-cell.rbc-today_.rbc-date-number]:bg-blue-500 [&_.rbc-date-cell.rbc-today_.rbc-date-number]:text-white [&_.rbc-date-cell.rbc-today_.rbc-date-number]:rounded-full [&_.rbc-date-cell.rbc-today_.rbc-date-number]:w-6 [&_.rbc-date-cell.rbc-today_.rbc-date-number]:h-6 [&_.rbc-date-cell.rbc-today_.rbc-date-number]:flex [&_.rbc-date-cell.rbc-today_.rbc-date-number]:items-center [&_.rbc-date-cell.rbc-today_.rbc-date-number]:justify-center [&_.rbc-date-cell.rbc-today_.rbc-date-number]:text-xs [&_.rbc-date-cell:hover_.site-name-item]:bg-green-100 [&_.rbc-date-cell:hover_.site-name-item]:border-green-500 [&_.rbc-date-cell:hover_.site-name-item]:text-green-800 [&_.rbc-date-cell:hover_.site-name-item]:font-medium [&_.rbc-date-cell:hover_.site-name-item]:scale-105">
             <Calendar
               localizer={localizer}
               events={events}
@@ -146,25 +146,7 @@ export function SiteCalendar({
         </CardContent>
       </Card>
 
-      {/* 凡例 */}
       <div className="flex items-center gap-6 text-sm text-muted-foreground">
-        {/* <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-500 rounded"></div>
-          <span>午前</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-500 rounded"></div>
-          <span>午後</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-          <span>終日</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red-500 rounded"></div>
-          <span>キャンセル</span>
-        </div> */}
-
         <div className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4" />
           <span>日付をクリックして現場を選択</span>

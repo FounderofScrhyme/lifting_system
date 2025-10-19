@@ -93,6 +93,14 @@ model Site {
   client              Client                    @relation(fields: [clientId], references: [id])
   assignments         StaffAssignment[]
   externalAssignments ExternalStaffAssignment[]
+
+  // パフォーマンス最適化用インデックス
+  @@index([date])                              // 日付検索用（最も重要）
+  @@index([clientId])                          // 取引先検索用
+  @@index([date, startTime])                   // 日付+時間ソート用
+  @@index([cancelled])                         // キャンセル状態フィルタ用
+  @@index([date, cancelled])                  // 日付+キャンセル状態複合検索用
+  @@index([clientId, date])                    // 取引先+日付複合検索用
 }
 
 model StaffAvailability {

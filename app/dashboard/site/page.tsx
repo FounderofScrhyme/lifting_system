@@ -18,6 +18,7 @@ export default function SitePage() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [editingSite, setEditingSite] = useState<Site | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [previousTab, setPreviousTab] = useState<string>("calendar");
 
   const { sites, loading, error, refreshSites } = useSiteData({
     autoFetch: true,
@@ -29,24 +30,29 @@ export default function SitePage() {
     setActiveTab("list");
   }, []);
 
-  const handleEdit = useCallback((site: Site) => {
-    setEditingSite(site);
-    setActiveTab("form");
-  }, []);
+  const handleEdit = useCallback(
+    (site: Site) => {
+      setPreviousTab(activeTab); // 現在のタブを記録
+      setEditingSite(site);
+      setActiveTab("form");
+    },
+    [activeTab]
+  );
 
   const handleFormSuccess = useCallback(async () => {
     setEditingSite(null);
-    setActiveTab("calendar");
+    setActiveTab(previousTab); // 前のタブに戻る
     await refreshSites();
     ErrorHandler.showSuccess(
       editingSite ? "現場情報を更新しました" : "現場を登録しました"
     );
-  }, [editingSite, refreshSites]);
+  }, [editingSite, previousTab, refreshSites]);
 
   const handleNewSite = useCallback(() => {
+    setPreviousTab(activeTab); // 現在のタブを記録
     setEditingSite(null);
     setActiveTab("form");
-  }, []);
+  }, [activeTab]);
 
   const handleCalendarMonthChange = useCallback(async () => {
     await refreshSites();
@@ -133,7 +139,7 @@ export default function SitePage() {
           <SiteForm
             initialData={editingSite}
             onSuccess={handleFormSuccess}
-            onCancel={() => setActiveTab("calendar")}
+            onCancel={() => setActiveTab(previousTab)}
           />
         </TabsContent>
       </Tabs>

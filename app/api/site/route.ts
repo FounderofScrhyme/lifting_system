@@ -39,6 +39,18 @@ export async function GET(request: NextRequest) {
               name: true,
             },
           },
+          assignments: {
+            include: {
+              staff: {
+                select: {
+                  id: true,
+                  name: true,
+                  employmentType: true,
+                },
+              },
+            },
+          },
+          externalAssignments: true,
         },
       });
 
@@ -61,6 +73,18 @@ export async function GET(request: NextRequest) {
               name: true,
             },
           },
+          assignments: {
+            include: {
+              staff: {
+                select: {
+                  id: true,
+                  name: true,
+                  employmentType: true,
+                },
+              },
+            },
+          },
+          externalAssignments: true,
         },
       }),
       prisma.site.count({ where }),

@@ -19,6 +19,27 @@ export interface Site {
     id: string;
     name: string;
   };
+  assignments?: {
+    id: string;
+    date: string;
+    siteId: string;
+    staffId: string;
+    timeSlot: string;
+    staff: {
+      id: string;
+      name: string;
+      employmentType: string;
+    };
+  }[];
+  externalAssignments?: {
+    id: string;
+    date: string;
+    siteId: string;
+    externalStaffName: string;
+    externalStaffCompany: string;
+    externalStaffNotes?: string;
+    timeSlot: string;
+  }[];
 }
 
 export enum SiteType {

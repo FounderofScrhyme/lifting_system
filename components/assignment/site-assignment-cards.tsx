@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Site } from "@/types/site";
-import { Staff } from "@/types/staff";
+import { Staff, SupportStaff } from "@/types/staff";
 import { MapPin, Clock, Users, X, User } from "lucide-react";
 
 interface AssignmentData {
@@ -20,6 +20,7 @@ interface SiteAssignmentCardsProps {
   pmSites: Site[];
   assignments: AssignmentData[];
   staff: Staff[];
+  supportStaff: SupportStaff[];
   onStaffAssign: (
     siteId: string,
     timeSlot: "AM" | "PM",
@@ -40,6 +41,7 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
   pmSites,
   assignments,
   staff,
+  supportStaff,
   onStaffAssign,
   onStaffUnassign,
   loading = false,
@@ -62,13 +64,13 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
   const getSiteTypeColor = (type: string) => {
     switch (type) {
       case "FULL":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+        return "bg-blue-100 text-blue-800";
       case "AM":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+        return "bg-green-100 text-green-800";
       case "PM":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -80,6 +82,15 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
   };
 
   const getStaffName = (staffId: string) => {
+    // 応援スタッフの場合
+    if (staffId.startsWith("support_")) {
+      const supportStaffMember = supportStaff.find((s) => s.id === staffId);
+      return supportStaffMember
+        ? `${supportStaffMember.companyName} (${supportStaffMember.count}名)`
+        : `応援スタッフ${staffId.slice(-4)}`;
+    }
+
+    // 自社スタッフの場合
     const staffMember = staff.find((s) => s.id === staffId);
     return staffMember ? staffMember.name : `スタッフ${staffId.slice(-4)}`;
   };
@@ -163,7 +174,7 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
                   onDragOver={(e) => e.stopPropagation()}
                   onDrop={(e) => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded-md gap-1 flex-1 min-w-0">
+                  <div className="flex items-center justify-center bg-neutral-100 rounded-md gap-1 flex-1 min-w-0">
                     <User className="h-3 w-3 text-primary flex-shrink-0" />
                     <span className="text-xs font-medium text-primary truncate">
                       {getStaffName(staffId)}

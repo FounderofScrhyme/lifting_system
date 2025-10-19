@@ -47,8 +47,6 @@ export function SiteList({
   onViewDetail,
 }: SiteListProps) {
   const [sites, setSites] = useState<Site[]>([]);
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,24 +58,11 @@ export function SiteList({
   const fetchSites = async () => {
     try {
       setLoading(true);
-      // 並列でデータを取得
-      const [sitesResponse, assignmentsResponse, staffResponse] =
-        await Promise.all([
-          axios.get(`/api/site?date=${selectedDate}`),
-          axios.get(`/api/assignment/assignments?date=${selectedDate}`),
-          axios.get(`/api/staff`),
-        ]);
-
+      const sitesResponse = await axios.get(`/api/site?date=${selectedDate}`);
       setSites(sitesResponse.data.data);
-      setAssignments(assignmentsResponse.data.data);
-      setStaff(staffResponse.data.data);
 
       // デバッグ用ログ
-      console.log("Fetched data:", {
-        sites: sitesResponse.data.data.length,
-        assignments: assignmentsResponse.data.data.length,
-        staff: staffResponse.data.data.length,
-      });
+      console.log("Fetched sites:", sitesResponse.data.data.length);
     } catch (error) {
       console.error("Error fetching sites:", error);
       toast.error("現場一覧の取得に失敗しました");
@@ -87,38 +72,205 @@ export function SiteList({
   };
 
   // 現場に割り当てられたスタッフの名前を取得
-  const getAssignedStaffNames = (siteId: string) => {
-    const siteAssignments = assignments.filter(
-      (assignment) => assignment.site.id === siteId
-    );
+  const getAssignedStaffNames = (site: Site) => {
+    const staffNames: string[] = [];
 
-    const staffNames = siteAssignments
-      .map((assignment) => {
-        // assignment.staff.id または assignment.staffId を確認
-        const staffId = assignment.staff?.id || assignment.staffId;
-        if (!staffId) {
-          console.warn("Staff ID not found in assignment:", assignment);
-          return null;
+    // 自社スタッフの割り当て
+    if (site.assignments) {
+      site.assignments.forEach((assignment) => {
+        if (assignment.staff) {
+          staffNames.push(assignment.staff.name);
         }
+      });
+    }
 
-        const staffMember = staff.find((s) => s.id === staffId);
-        if (!staffMember) {
-          console.warn("Staff member not found for ID:", staffId);
-          return null;
-        }
-
-        return staffMember.name;
-      })
-      .filter((name) => name !== null); // null値を除外
+    // 応援スタッフの割り当て
+    if (site.externalAssignments) {
+      site.externalAssignments.forEach((assignment) => {
+        staffNames.push(assignment.externalStaffName);
+      });
+    }
 
     return staffNames;
+  };
+
+  // スマホ専用のコピー処理
+  const tryMobileCopy = async (copyText: string) => {
+    try {
+      // 方法1: 一時的なテキストエリアを作成してコピー（スマホ最適化）
+      const textArea = document.createElement("textarea");
+      textArea.value = copyText;
+      textArea.style.position = "fixed";
+      textArea.style.left = "50%";
+      textArea.style.top = "50%";
+      textArea.style.transform = "translate(-50%, -50%)";
+      textArea.style.width = "1px";
+      textArea.style.height = "1px";
+      textArea.style.opacity = "0";
+      textArea.style.pointerEvents = "none";
+      textArea.style.zIndex = "-1";
+      textArea.setAttribute("readonly", "");
+
+      document.body.appendChild(textArea);
+
+      // テキストを選択
+      textArea.focus();
+      textArea.select();
+      textArea.setSelectionRange(0, 99999);
+
+      // 少し待機してからコピーを実行
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+
+      if (successful) {
+        toast.success("現場詳細をコピーしました");
+        return;
+      }
+
+      // 方法2: ユーザーにタップを促す方法
+      const tempDiv = document.createElement("div");
+      tempDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        text-align: center;
+        font-size: 16px;
+        max-width: 90%;
+      `;
+
+      tempDiv.innerHTML = `
+        <div>テキストをタップしてコピーしてください</div>
+        <div style="margin-top: 10px; padding: 10px; background: white; color: black; border-radius: 4px; font-family: monospace; font-size: 12px; word-break: break-all; max-height: 200px; overflow-y: auto;">${copyText}</div>
+        <button style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">閉じる</button>
+      `;
+
+      const textElement = tempDiv.querySelector("div:nth-child(2)");
+      const closeButton = tempDiv.querySelector("button");
+
+      if (textElement) {
+        textElement.addEventListener("click", () => {
+          // テキストを選択
+          const range = document.createRange();
+          range.selectNodeContents(textElement);
+          const selection = window.getSelection();
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+
+          // コピーを試行
+          try {
+            document.execCommand("copy");
+            toast.success("コピーしました");
+          } catch (e) {
+            toast.error("コピーに失敗しました");
+          }
+        });
+      }
+
+      if (closeButton) {
+        closeButton.addEventListener("click", () => {
+          document.body.removeChild(tempDiv);
+        });
+      }
+
+      document.body.appendChild(tempDiv);
+
+      // 3秒後に自動で閉じる
+      setTimeout(() => {
+        if (document.body.contains(tempDiv)) {
+          document.body.removeChild(tempDiv);
+        }
+      }, 10000);
+    } catch (error) {
+      console.error("Mobile copy failed:", error);
+      // 最後の手段としてモーダルを表示
+      showCopyModal(copyText);
+    }
+  };
+
+  // コピーモーダルを表示する関数
+  const showCopyModal = (copyText: string) => {
+    const modal = document.createElement("div");
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    `;
+
+    const content = document.createElement("div");
+    content.style.cssText = `
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 90%;
+      max-height: 80%;
+      overflow: auto;
+    `;
+
+    const title = document.createElement("h3");
+    title.textContent = "現場詳細をコピーしてください";
+    title.style.cssText =
+      "margin: 0 0 15px 0; font-size: 18px; font-weight: bold;";
+
+    const textarea = document.createElement("textarea");
+    textarea.value = copyText;
+    textarea.style.cssText = `
+      width: 100%;
+      height: 200px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 14px;
+      resize: vertical;
+    `;
+
+    const button = document.createElement("button");
+    button.textContent = "閉じる";
+    button.style.cssText = `
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    `;
+    button.onclick = () => document.body.removeChild(modal);
+
+    content.appendChild(title);
+    content.appendChild(textarea);
+    content.appendChild(button);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    // テキストエリアを選択
+    textarea.focus();
+    textarea.select();
+
+    toast.info("テキストを手動でコピーしてください");
   };
 
   // 現場詳細をコピーする関数
   const handleCopySiteDetails = async (site: Site) => {
     try {
       // 振り分けられたスタッフの名前を取得
-      const assignedStaffNames = getAssignedStaffNames(site.id);
+      const assignedStaffNames = getAssignedStaffNames(site);
 
       // Google Mapリンクを生成
       const googleMapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -148,7 +300,38 @@ export function SiteList({
         `【Google Map】${googleMapLink}`,
       ].join("\n");
 
-      // モダンブラウザのClipboard APIを試行
+      // スマホでの追加対応: ユーザーインタラクションが必要な場合
+      const isMobile =
+        /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+      const isTouchDevice =
+        "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+      // スマホ/タッチデバイスでのClipboard API試行（より積極的に）
+      if (isMobile || isTouchDevice) {
+        // スマホでは、ユーザーインタラクションの直後にClipboard APIを試行
+        if (navigator.clipboard) {
+          try {
+            // ユーザーインタラクションを確実にするため、少し待機
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            await navigator.clipboard.writeText(copyText);
+            toast.success("現場詳細をコピーしました");
+            return;
+          } catch (clipboardError) {
+            console.warn("Mobile Clipboard API failed:", clipboardError);
+            // スマホでClipboard APIが失敗した場合は、より確実な方法を試行
+            await tryMobileCopy(copyText);
+            return;
+          }
+        } else {
+          // Clipboard APIが利用できない場合は、より確実な方法を試行
+          await tryMobileCopy(copyText);
+          return;
+        }
+      }
+
+      // デスクトップでのClipboard API試行
       if (navigator.clipboard && window.isSecureContext) {
         try {
           await navigator.clipboard.writeText(copyText);
@@ -168,9 +351,14 @@ export function SiteList({
       textArea.style.position = "fixed";
       textArea.style.left = "-999999px";
       textArea.style.top = "-999999px";
+      textArea.style.opacity = "0";
+      textArea.setAttribute("readonly", "");
       document.body.appendChild(textArea);
+
+      // スマホでの選択を改善
       textArea.focus();
       textArea.select();
+      textArea.setSelectionRange(0, 99999); // モバイル対応
 
       try {
         const successful = document.execCommand("copy");
@@ -182,74 +370,7 @@ export function SiteList({
       } catch (fallbackError) {
         console.error("Fallback copy failed:", fallbackError);
         // 最後の手段: テキストを表示してユーザーに手動コピーを促す
-        const modal = document.createElement("div");
-        modal.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0,0,0,0.8);
-          z-index: 10000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-          box-sizing: border-box;
-        `;
-
-        const content = document.createElement("div");
-        content.style.cssText = `
-          background: white;
-          padding: 20px;
-          border-radius: 8px;
-          max-width: 90%;
-          max-height: 80%;
-          overflow: auto;
-        `;
-
-        const title = document.createElement("h3");
-        title.textContent = "現場詳細をコピーしてください";
-        title.style.cssText =
-          "margin: 0 0 15px 0; font-size: 18px; font-weight: bold;";
-
-        const textarea = document.createElement("textarea");
-        textarea.value = copyText;
-        textarea.style.cssText = `
-          width: 100%;
-          height: 200px;
-          padding: 10px;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-family: monospace;
-          font-size: 14px;
-          resize: vertical;
-        `;
-
-        const button = document.createElement("button");
-        button.textContent = "閉じる";
-        button.style.cssText = `
-          margin-top: 15px;
-          padding: 10px 20px;
-          background: #007bff;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-        `;
-        button.onclick = () => document.body.removeChild(modal);
-
-        content.appendChild(title);
-        content.appendChild(textarea);
-        content.appendChild(button);
-        modal.appendChild(content);
-        document.body.appendChild(modal);
-
-        // テキストエリアを選択
-        textarea.focus();
-        textarea.select();
-
-        toast.info("テキストを手動でコピーしてください");
+        showCopyModal(copyText);
       } finally {
         document.body.removeChild(textArea);
       }
@@ -329,13 +450,13 @@ export function SiteList({
   const getSiteTypeColor = (siteType: string) => {
     switch (siteType) {
       case "FULL":
-        return "bg-yello-100 text-yello-800 dark:bg-yellow-900 dark:text-yellow-300";
+        return "bg-yellow-100 text-yellow-800";
       case "AM":
-        return "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-300";
+        return "bg-sky-100 text-sky-800";
       case "PM":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+        return "bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -350,10 +471,8 @@ export function SiteList({
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                読み込み中...
-              </p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-500">読み込み中...</p>
             </div>
           </div>
         </CardContent>
@@ -372,8 +491,8 @@ export function SiteList({
       <CardContent>
         {sites.length === 0 ? (
           <div className="text-center py-8">
-            <MapPin className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">
+            <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">
               {selectedDate
                 ? "この日の現場はありません"
                 : "現場データがありません"}
@@ -416,9 +535,8 @@ export function SiteList({
                     <TableCell>
                       {(() => {
                         try {
-                          const assignedStaffNames = getAssignedStaffNames(
-                            site.id
-                          );
+                          const assignedStaffNames =
+                            getAssignedStaffNames(site);
                           console.log(
                             `Staff names for site ${site.id}:`,
                             assignedStaffNames

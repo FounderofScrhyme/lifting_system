@@ -20,7 +20,14 @@ export function NavDocuments({
     icon: Icon;
   }[];
 }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    // スマホの場合、メニュー選択時にサイドバーを閉じる
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -29,7 +36,7 @@ export function NavDocuments({
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <a href={item.url}>
+              <a href={item.url} onClick={handleLinkClick}>
                 <item.icon />
                 <span>{item.name}</span>
               </a>

@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
-import { Staff } from "@/types/staff";
+import { Staff, SupportStaff, SupportStaffFormData } from "@/types/staff";
 import { Site } from "@/types/site";
 
 interface AssignmentData {
@@ -23,6 +23,7 @@ interface AssignmentData {
 export default function AssignmentPage() {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableStaff, setAvailableStaff] = useState<Staff[]>([]);
+  const [supportStaff, setSupportStaff] = useState<SupportStaff[]>([]);
   const [amSites, setAmSites] = useState<Site[]>([]);
   const [pmSites, setPmSites] = useState<Site[]>([]);
   const [assignments, setAssignments] = useState<AssignmentData[]>([]);
@@ -48,6 +49,7 @@ export default function AssignmentPage() {
         ]);
 
       setAvailableStaff(staffResponse.data.data);
+      setSupportStaff(staffResponse.data.supportStaff || []);
 
       const sites = sitesResponse.data.data;
       // 午前・午後に分ける
@@ -70,14 +72,18 @@ export default function AssignmentPage() {
 
       rawAssignments.forEach((assignment: any) => {
         const key = `${assignment.site.id}_${assignment.timeSlot}`;
+        const staffId = assignment.staff
+          ? assignment.staff.id
+          : assignment.staffId;
+
         if (assignmentMap.has(key)) {
-          assignmentMap.get(key)!.staffIds.push(assignment.staff.id);
+          assignmentMap.get(key)!.staffIds.push(staffId);
         } else {
           assignmentMap.set(key, {
             siteId: assignment.site.id,
             date: assignment.date,
             timeSlot: assignment.timeSlot,
-            staffIds: [assignment.staff.id],
+            staffIds: [staffId],
           });
         }
       });
@@ -177,6 +183,31 @@ export default function AssignmentPage() {
     });
   };
 
+  const handleAddSupportStaff = (data: SupportStaffFormData) => {
+    // 既存の応援スタッフと重複しないIDを生成
+    const existingIds = supportStaff.map((s) => s.id);
+    let newId = `support_${Date.now()}`;
+    let counter = 1;
+    while (existingIds.includes(newId)) {
+      newId = `support_${Date.now()}_${counter}`;
+      counter++;
+    }
+
+    const newSupportStaff: SupportStaff = {
+      id: newId,
+      companyName: data.companyName,
+      count: data.count,
+      date: selectedDate,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    setSupportStaff((prev) => [...prev, newSupportStaff]);
+    toast.success(
+      `${data.companyName}の応援スタッフ${data.count}名を追加しました`
+    );
+  };
+
   const handleConfirm = async () => {
     try {
       setSaving(true);
@@ -184,6 +215,7 @@ export default function AssignmentPage() {
       console.log("Confirming assignments:", {
         date: selectedDate,
         assignments: assignments,
+        supportStaff: supportStaff,
       });
 
       // バリデーション
@@ -197,11 +229,22 @@ export default function AssignmentPage() {
         return;
       }
 
+      // 応援スタッフと自社スタッフを分離
+      const staffAssignments = assignments.filter((assignment) =>
+        assignment.staffIds.some((staffId) => !staffId.startsWith("support_"))
+      );
+
+      const supportAssignments = assignments.filter((assignment) =>
+        assignment.staffIds.some((staffId) => staffId.startsWith("support_"))
+      );
+
       const response = await axios.post(
         "/api/assignment/confirm",
         {
           date: selectedDate,
-          assignments: assignments,
+          assignments: staffAssignments,
+          supportAssignments: supportAssignments,
+          supportStaff: supportStaff,
         },
         {
           headers: {
@@ -286,10 +329,13 @@ export default function AssignmentPage() {
               {/* 出勤可能スタッフ */}
               <AvailableStaffList
                 staff={availableStaff}
+                supportStaff={supportStaff}
                 assignments={assignments}
                 onStaffAssign={handleStaffAssign}
+                onAddSupportStaff={handleAddSupportStaff}
                 draggedStaff={draggedStaff}
                 setDraggedStaff={setDraggedStaff}
+                selectedDate={selectedDate}
               />
 
               {/* 現場割り当てカード */}
@@ -298,6 +344,7 @@ export default function AssignmentPage() {
                 pmSites={pmSites}
                 assignments={assignments}
                 staff={availableStaff}
+                supportStaff={supportStaff}
                 onStaffAssign={handleStaffAssign}
                 onStaffUnassign={handleStaffUnassign}
                 loading={loading}

@@ -213,10 +213,8 @@ export function SaleList({ onEdit, onRefresh }: SaleListProps) {
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                読み込み中...
-              </p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-500">読み込み中...</p>
             </div>
           </div>
         </CardContent>
@@ -239,7 +237,7 @@ export function SaleList({ onEdit, onRefresh }: SaleListProps) {
       </CardHeader>
       <CardContent>
         {/* 検索フィルター */}
-        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="clientFilter">取引先</Label>
@@ -324,10 +322,8 @@ export function SaleList({ onEdit, onRefresh }: SaleListProps) {
 
         {sales.length === 0 ? (
           <div className="text-center py-8">
-            <JapaneseYen className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">
-              売上データがありません
-            </p>
+            <JapaneseYen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">売上データがありません</p>
           </div>
         ) : (
           <>
