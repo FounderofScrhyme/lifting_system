@@ -21,6 +21,11 @@ interface SupportStaffModalProps {
   selectedDate: string;
 }
 
+interface FormErrors {
+  companyName?: string;
+  count?: string;
+}
+
 export function SupportStaffModal({
   onAddSupportStaff,
   selectedDate,
@@ -30,13 +35,13 @@ export function SupportStaffModal({
     companyName: "",
     count: 1,
   });
-  const [errors, setErrors] = useState<Partial<SupportStaffFormData>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // バリデーション
-    const newErrors: Partial<SupportStaffFormData> = {};
+    const newErrors: FormErrors = {};
     if (!formData.companyName.trim()) {
       newErrors.companyName = "応援会社名は必須です";
     }
