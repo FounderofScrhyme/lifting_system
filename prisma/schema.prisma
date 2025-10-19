@@ -93,6 +93,7 @@ model Site {
   client              Client                    @relation(fields: [clientId], references: [id])
   assignments         StaffAssignment[]
   externalAssignments ExternalStaffAssignment[]
+  invoiceChecks       InvoiceCheck[]
 
   // パフォーマンス最適化用インデックス
   @@index([date])                              // 日付検索用（最も重要）
@@ -236,4 +237,22 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+model InvoiceCheck {
+  id        String   @id @default(cuid())
+  date      DateTime
+  siteId    String
+  siteName  String
+  clientName String
+  workContent String?
+  siteNotes String?
+  additionalText String? // 新たに付与するテキスト
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@index([siteId])
+  @@index([date, siteId])
 }

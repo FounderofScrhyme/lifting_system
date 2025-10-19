@@ -6,6 +6,7 @@ import {
   IconCalendar,
   IconCalendarOff,
   IconCoinYen,
+  IconCreditCard,
   IconCreditCardRefund,
   IconDashboard,
   IconReplaceUser,
@@ -66,6 +67,11 @@ const data = {
       title: "振り分け管理",
       url: "/dashboard/assignment",
       icon: IconReplaceUser,
+    },
+    {
+      title: "取引先向け請求書確認",
+      url: "/dashboard/invoice-check",
+      icon: IconCreditCard,
     },
   ],
   documents: [
