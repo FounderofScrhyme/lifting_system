@@ -1,117 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-// GET - スタッフ一覧取得（ページネーション対応）
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search");
-    const skip = (page - 1) * limit;
-
-    // 検索条件を構築
-    const where: any = {};
-    if (search) {
-      where.name = {
-        contains: search,
-        mode: "insensitive",
-      };
-    }
-
-    const [staff, total] = await Promise.all([
-      prisma.staff.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "asc" },
-        select: {
-          id: true,
-          name: true,
-          birthDate: true,
-          phone: true,
-          email: true,
-          postalCode: true,
-          address: true,
-          employmentType: true,
-          bloodType: true,
-          lastCheckupDate: true,
-          emergencyPhone: true,
-          emergencyName: true,
-          bloodPressure: true,
-          notes: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      }),
-      prisma.staff.count({ where }),
-    ]);
-
-    const totalPages = Math.ceil(total / limit);
-
-    return NextResponse.json({
-      data: staff,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
+    const staff = await prisma.staff.findMany({
+      where: {
+        hidden: false, // 非表示でないスタッフのみ取得
       },
-    });
-  } catch (error) {
-    console.error("Error fetching staff:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch staff" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST - スタッフ作成
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const {
-      name,
-      birthDate,
-      phone,
-      email,
-      postalCode,
-      address,
-      emergencyName,
-      emergencyPhone,
-      bloodType,
-      bloodPressure,
-      lastCheckupDate,
-      employmentType,
-      notes,
-    } = body;
-
-    const staff = await prisma.staff.create({
-      data: {
-        name,
-        birthDate: new Date(birthDate),
-        phone,
-        email: email || null,
-        postalCode: postalCode || null,
-        address: address || null,
-        emergencyName,
-        emergencyPhone,
-        bloodType: bloodType || null,
-        bloodPressure: bloodPressure || null,
-        lastCheckupDate: lastCheckupDate ? new Date(lastCheckupDate) : null,
-        employmentType,
-        notes: notes || null,
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        address: true,
+        employmentType: true,
+      },
+      orderBy: {
+        name: "asc",
       },
     });
 
-    return NextResponse.json(staff, { status: 201 });
+    return NextResponse.json(staff);
   } catch (error) {
-    console.error("Error creating staff:", error);
+    console.error("スタッフデータ取得エラー:", error);
     return NextResponse.json(
-      { error: "Failed to create staff" },
+      { error: "スタッフデータの取得に失敗しました" },
       { status: 500 }
     );
   }
