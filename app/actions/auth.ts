@@ -27,7 +27,7 @@ export async function signUpAction(formData: FormData) {
     });
 
     // 作成後、サインインページにリダイレクト
-    redirect("/signin");
+    redirect("/dashboard");
   } catch (error) {
     console.error("サインアップエラー:", error);
     throw new Error("ユーザー作成に失敗しました");

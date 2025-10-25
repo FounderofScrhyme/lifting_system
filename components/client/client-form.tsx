@@ -157,11 +157,7 @@ export function ClientForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">取引先名 *</Label>
-              <Input
-                id="name"
-                {...register("name")}
-                placeholder="株式会社サンプル"
-              />
+              <Input id="name" {...register("name")} placeholder="●●工務店" />
               {errors.name && (
                 <p className="text-sm text-red-500">{errors.name.message}</p>
               )}

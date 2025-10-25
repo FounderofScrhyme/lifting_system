@@ -4,7 +4,7 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request });
 
-  // 認証が必要なルート
+  // 認証が必要なルート（/dashboard配下のすべてのページ）
   const protectedRoutes = ["/dashboard"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)

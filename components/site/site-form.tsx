@@ -55,7 +55,6 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const {
-    register,
     handleSubmit,
     setValue,
     watch,
@@ -144,7 +143,7 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     } else {
       // 新規作成時はフォームをリセット
       reset({
-        siteType: SiteType.FULL,
+        siteType: SiteType.AM,
       });
       setManagerPhone("");
       setPostalCode("");
@@ -241,9 +240,9 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
   };
 
   const siteTypeOptions = [
-    { value: SiteType.FULL, label: "終日" },
     { value: SiteType.AM, label: "午前" },
     { value: SiteType.PM, label: "午後" },
+    { value: SiteType.FULL, label: "終日" },
   ];
 
   // 取引先データの読み込み中はローディング表示
@@ -471,7 +470,7 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
                 id="postalCode"
                 value={postalCodeFormat.value}
                 onChange={handlePostalCodeChange}
-                placeholder="100-0001"
+                placeholder="100-1000"
               />
             </div>
 

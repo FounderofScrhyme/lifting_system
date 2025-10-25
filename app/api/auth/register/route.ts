@@ -13,6 +13,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // シングルユーザー制限: 既にユーザーが存在するかチェック
+    const userCount = await prisma.user.count();
+    if (userCount >= 1) {
+      return NextResponse.json(
+        { message: "アカウントは既に作成済みです。ログインしてください。" },
+        { status: 403 }
+      );
+    }
+
     // 既存ユーザーのチェック
     const existingUser = await prisma.user.findUnique({
       where: { email },
