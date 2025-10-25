@@ -77,11 +77,31 @@ export function StaffList({ onEdit, onRefresh }: StaffListProps) {
       const response = await axios.get(
         `/api/staff?page=${currentPage}&limit=10`
       );
-      setStaff(response.data.data);
-      setPagination(response.data.pagination);
+      // データが存在することを確認してから設定
+      setStaff(response.data.data || []);
+      setPagination(
+        response.data.pagination || {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        }
+      );
     } catch (error) {
       console.error("Error fetching staff:", error);
       toast.error("スタッフ一覧の取得に失敗しました");
+      // エラー時は空配列を設定
+      setStaff([]);
+      setPagination({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      });
     } finally {
       setLoading(false);
     }
@@ -135,7 +155,7 @@ export function StaffList({ onEdit, onRefresh }: StaffListProps) {
     );
   }
 
-  if (staff.length === 0) {
+  if (!staff || staff.length === 0) {
     return (
       <Card>
         <CardHeader>
