@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -27,19 +21,18 @@ model Staff {
   bloodPressure   String?
   lastCheckupDate DateTime?
   employmentType  EmploymentType
-  hidden          Boolean             @default(false)
   notes           String?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+  hidden          Boolean             @default(false)
   assignments     StaffAssignment[]
   availabilities  StaffAvailability[]
 
-  // パフォーマンス最適化用インデックス
-  @@index([name])                    // 名前検索用
-  @@index([employmentType])          // 雇用形態フィルタ用
-  @@index([createdAt])               // 作成日時ソート用
-  @@index([name, employmentType])    // 複合検索用
-  @@index([employmentType, createdAt]) // 雇用形態+ソート用
+  @@index([name])
+  @@index([employmentType])
+  @@index([createdAt])
+  @@index([name, employmentType])
+  @@index([employmentType, createdAt])
 }
 
 model Client {
@@ -86,22 +79,21 @@ model Site {
   address             String
   googleMapUrl        String?
   cancelled           Boolean                   @default(false)
-  workContent         String?
   createdAt           DateTime                  @default(now())
   updatedAt           DateTime                  @updatedAt
   notes               String?
-  client              Client                    @relation(fields: [clientId], references: [id])
-  assignments         StaffAssignment[]
+  workContent         String?
   externalAssignments ExternalStaffAssignment[]
   invoiceChecks       InvoiceCheck[]
+  client              Client                    @relation(fields: [clientId], references: [id])
+  assignments         StaffAssignment[]
 
-  // パフォーマンス最適化用インデックス
-  @@index([date])                              // 日付検索用（最も重要）
-  @@index([clientId])                          // 取引先検索用
-  @@index([date, startTime])                   // 日付+時間ソート用
-  @@index([cancelled])                         // キャンセル状態フィルタ用
-  @@index([date, cancelled])                  // 日付+キャンセル状態複合検索用
-  @@index([clientId, date])                    // 取引先+日付複合検索用
+  @@index([date])
+  @@index([clientId])
+  @@index([date, startTime])
+  @@index([cancelled])
+  @@index([date, cancelled])
+  @@index([clientId, date])
 }
 
 model StaffAvailability {
@@ -154,6 +146,47 @@ model ExternalStaffAssignment {
   @@index([date])
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String?
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  @@map("user")
+}
+
+
+model InvoiceCheck {
+  id             String   @id @default(cuid())
+  date           DateTime
+  siteId         String
+  siteName       String
+  clientName     String
+  workContent    String?
+  siteNotes      String?
+  additionalText String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  site           Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@index([siteId])
+  @@index([date, siteId])
+}
+
+model verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
+
 enum EmploymentType {
   SPOT
   REGULAR
@@ -177,82 +210,4 @@ enum AvailabilityType {
 enum TimeSlot {
   AM
   PM
-}
-
-model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-
-  @@unique([email])
-  @@map("user")
-}
-
-model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([token])
-  @@map("session")
-}
-
-model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  @@map("account")
-}
-
-model Verification {
-  id         String   @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
-
-  @@map("verification")
-}
-
-model InvoiceCheck {
-  id        String   @id @default(cuid())
-  date      DateTime
-  siteId    String
-  siteName  String
-  clientName String
-  workContent String?
-  siteNotes String?
-  additionalText String? // 新たに付与するテキスト
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-
-  @@index([date])
-  @@index([siteId])
-  @@index([date, siteId])
 }

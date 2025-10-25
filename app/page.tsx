@@ -6,16 +6,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { signOutAction } from "./actions/auth";
 
 export default async function Home() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getServerSession(authOptions);
+
   if (!session) {
     return (
       <Card className="w-full md:w-1/2 mx-auto">
@@ -44,11 +42,12 @@ export default async function Home() {
       <h1 className="text-4xl font-bold">LIFTING業務システム</h1>
       <div className="mt-8 text-center">
         <p className="text-md mb-4">User ID: {session.user.id}</p>
-        <form action={signOutAction}>
-          <Button type="submit" variant="outline">
-            ログアウト
-          </Button>
-        </form>
+        <a href="/api/auth/signout">
+          <Button variant="outline">ログアウト</Button>
+        </a>
+        <p className="text-sm text-gray-500 mt-2">
+          複数端末から同時にログイン可能です
+        </p>
       </div>
     </div>
   );

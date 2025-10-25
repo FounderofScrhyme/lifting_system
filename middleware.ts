@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 
 export async function middleware(request: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const token = await getToken({ req: request });
 
-  if (!session) {
+  // 認証が必要なルート
+  const protectedRoutes = ["/dashboard"];
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+
+  if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 
@@ -16,5 +19,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   runtime: "nodejs",
-  matcher: ["/"], // Apply middleware to specific routes
+  matcher: ["/dashboard/:path*"], // ダッシュボード配下のルートに適用
 };
