@@ -24,13 +24,14 @@ model Staff {
   notes           String?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
-  hidden          Boolean             @default(false)
+  deletedAt       DateTime?           @map("deleted_at")
   assignments     StaffAssignment[]
   availabilities  StaffAvailability[]
 
   @@index([name])
   @@index([employmentType])
   @@index([createdAt])
+  @@index([deletedAt])
   @@index([name, employmentType])
   @@index([employmentType, createdAt])
 }
@@ -147,18 +148,17 @@ model ExternalStaffAssignment {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
-  email         String    @unique
-  password      String?
-  emailVerified Boolean   @default(false)
+  email         String   @unique
+  emailVerified Boolean  @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  password      String?
 
   @@map("user")
 }
-
 
 model InvoiceCheck {
   id             String   @id @default(cuid())

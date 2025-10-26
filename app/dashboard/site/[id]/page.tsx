@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+
 import {
   ArrowLeft,
   MapPin,
@@ -336,20 +336,38 @@ export default function SiteDetailPage() {
                     {site.assignedStaff.am.map((staff) => (
                       <div
                         key={staff.id}
-                        className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                        className={`flex items-center justify-between p-2 rounded-md ${
+                          staff.deletedAt
+                            ? "bg-red-50 border border-red-200 opacity-75"
+                            : "bg-muted/50"
+                        }`}
                       >
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{staff.name}</span>
+                          <span
+                            className={`font-medium ${
+                              staff.deletedAt ? "text-red-600" : ""
+                            }`}
+                          >
+                            {staff.name}
+                            {staff.deletedAt && " (削除済み)"}
+                          </span>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${getEmploymentTypeColor(
-                            staff.employmentType
-                          )}`}
-                        >
-                          {getEmploymentTypeLabel(staff.employmentType)}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {staff.deletedAt && (
+                            <Badge variant="destructive" className="text-xs">
+                              削除済み
+                            </Badge>
+                          )}
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${getEmploymentTypeColor(
+                              staff.employmentType
+                            )}`}
+                          >
+                            {getEmploymentTypeLabel(staff.employmentType)}
+                          </Badge>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -370,20 +388,38 @@ export default function SiteDetailPage() {
                     {site.assignedStaff.pm.map((staff) => (
                       <div
                         key={staff.id}
-                        className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                        className={`flex items-center justify-between p-2 rounded-md ${
+                          staff.deletedAt
+                            ? "bg-red-50 border border-red-200 opacity-75"
+                            : "bg-muted/50"
+                        }`}
                       >
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{staff.name}</span>
+                          <span
+                            className={`font-medium ${
+                              staff.deletedAt ? "text-red-600" : ""
+                            }`}
+                          >
+                            {staff.name}
+                            {staff.deletedAt && " (削除済み)"}
+                          </span>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${getEmploymentTypeColor(
-                            staff.employmentType
-                          )}`}
-                        >
-                          {getEmploymentTypeLabel(staff.employmentType)}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {staff.deletedAt && (
+                            <Badge variant="destructive" className="text-xs">
+                              削除済み
+                            </Badge>
+                          )}
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${getEmploymentTypeColor(
+                              staff.employmentType
+                            )}`}
+                          >
+                            {getEmploymentTypeLabel(staff.employmentType)}
+                          </Badge>
+                        </div>
                       </div>
                     ))}
                   </div>

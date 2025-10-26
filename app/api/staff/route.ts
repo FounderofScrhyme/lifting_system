@@ -7,20 +7,30 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
     const skip = (page - 1) * limit;
 
-    // 総数を取得
+    // 検索条件を構築
+    const whereCondition: any = {
+      deletedAt: null, // ソフトデリートされていないスタッフのみ
+    };
+
+    // 検索クエリがある場合は名前で検索
+    if (search.trim()) {
+      whereCondition.name = {
+        contains: search.trim(),
+        mode: "insensitive", // 大文字小文字を区別しない
+      };
+    }
+
+    // 総数を取得（検索条件を含む）
     const total = await prisma.staff.count({
-      where: {
-        hidden: false,
-      },
+      where: whereCondition,
     });
 
-    // スタッフデータを取得
+    // スタッフデータを取得（検索条件を含む）
     const staff = await prisma.staff.findMany({
-      where: {
-        hidden: false, // 非表示でないスタッフのみ取得
-      },
+      where: whereCondition,
       select: {
         id: true,
         name: true,
@@ -40,7 +50,7 @@ export async function GET(request: Request) {
         updatedAt: true,
       },
       orderBy: {
-        name: "asc",
+        createdAt: "desc", // 最近登録された順（降順）
       },
       skip,
       take: limit,
@@ -118,7 +128,6 @@ export async function POST(request: Request) {
         lastCheckupDate: lastCheckupDate ? new Date(lastCheckupDate) : null,
         employmentType,
         notes: notes || null,
-        hidden: false,
       },
     });
 

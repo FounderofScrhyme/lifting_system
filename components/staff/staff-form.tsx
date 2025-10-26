@@ -23,25 +23,83 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 const staffSchema = z.object({
-  name: z.string().min(1, "名前は必須です"),
-  birthDate: z.string().min(1, "生年月日は必須です"),
-  phone: z.string().min(1, "電話番号は必須です"),
+  name: z
+    .string({
+      message: "名前を入力してください",
+    })
+    .min(1, "名前は必須です"),
+
+  birthDate: z
+    .string({
+      message: "生年月日を入力してください",
+    })
+    .min(1, "生年月日は必須です"),
+
+  phone: z
+    .string({
+      message: "電話番号を入力してください",
+    })
+    .min(1, "電話番号は必須です"),
+
   email: z
-    .string()
+    .string({
+      message: "メールアドレスを正しく入力してください",
+    })
     .email("有効なメールアドレスを入力してください")
     .optional()
     .or(z.literal("")),
-  postalCode: z.string().optional(),
-  address: z.string().optional(),
-  emergencyName: z.string().min(1, "緊急連絡先の名前は必須です"),
-  emergencyPhone: z.string().min(1, "緊急連絡先の電話番号は必須です"),
-  bloodType: z.string().optional(),
-  bloodPressure: z.string().optional(),
-  lastCheckupDate: z.string().optional(),
+
+  postalCode: z
+    .string({
+      message: "郵便番号は文字列で入力してください",
+    })
+    .optional(),
+
+  address: z
+    .string({
+      message: "住所は文字列で入力してください",
+    })
+    .optional(),
+
+  emergencyName: z
+    .string({
+      message: "緊急連絡先の名前を入力してください",
+    })
+    .min(1, "緊急連絡先の名前は必須です"),
+
+  emergencyPhone: z
+    .string({
+      message: "緊急連絡先の電話番号を入力してください",
+    })
+    .min(1, "緊急連絡先の電話番号は必須です"),
+
+  bloodType: z
+    .string({
+      message: "血液型は文字列で入力してください",
+    })
+    .optional(),
+
+  bloodPressure: z
+    .string({
+      message: "血圧は文字列で入力してください",
+    })
+    .optional(),
+
+  lastCheckupDate: z
+    .string({
+      message: "最終健診日は正しい日付形式で入力してください",
+    })
+    .optional(),
+
   employmentType: z.enum(["SPOT", "REGULAR"], {
     message: "雇用形態を選択してください",
   }),
-  notes: z.string().optional(),
+
+  notes: z
+    .string({
+      message: "備考は文字列で入力してください",
+    })
+    .optional(),
 });
 
 type StaffFormData = z.infer<typeof staffSchema>;
@@ -153,6 +211,31 @@ export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
     }
   };
 
+  // 郵便番号のIME入力終了時のハンドラー
+  const handlePostalCodeCompositionEnd = async (
+    e: React.CompositionEvent<HTMLInputElement>
+  ) => {
+    postalCodeFormat.onCompositionEnd(e);
+
+    const postalCode = e.currentTarget.value;
+    const cleanPostalCode = postalCode.replace(/\D/g, "");
+
+    // 7桁の数字が入力された場合のみ住所を取得
+    if (cleanPostalCode.length === 7) {
+      setIsLoadingAddress(true);
+      try {
+        const address = await getAddressFromPostalCode(postalCode);
+        if (address) {
+          setValue("address", address);
+        }
+      } catch (error) {
+        console.error("住所取得エラー:", error);
+      } finally {
+        setIsLoadingAddress(false);
+      }
+    }
+  };
+
   const onSubmit = async (data: StaffFormData) => {
     setIsSubmitting(true);
     try {
@@ -220,8 +303,13 @@ export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
                 value={phoneFormat.value}
                 onChange={(e) => {
                   phoneFormat.onChange(e);
-                  setValue("phone", e.target.value);
+                  setValue("phone", phoneFormat.value);
                 }}
+                onInput={phoneFormat.onInput}
+                onCompositionStart={phoneFormat.onCompositionStart}
+                onCompositionEnd={phoneFormat.onCompositionEnd}
+                inputMode="numeric"
+                autoComplete="tel"
                 placeholder="090-1234-5678"
               />
               {errors.phone && (
@@ -249,8 +337,13 @@ export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
                 value={postalCodeFormat.value}
                 onChange={(e) => {
                   handlePostalCodeChange(e);
-                  setValue("postalCode", e.target.value);
+                  setValue("postalCode", postalCodeFormat.value);
                 }}
+                onInput={postalCodeFormat.onInput}
+                onCompositionStart={postalCodeFormat.onCompositionStart}
+                onCompositionEnd={handlePostalCodeCompositionEnd}
+                inputMode="numeric"
+                autoComplete="postal-code"
                 placeholder="123-4567"
               />
               {isLoadingAddress && (
@@ -288,8 +381,13 @@ export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
                 value={emergencyPhoneFormat.value}
                 onChange={(e) => {
                   emergencyPhoneFormat.onChange(e);
-                  setValue("emergencyPhone", e.target.value);
+                  setValue("emergencyPhone", emergencyPhoneFormat.value);
                 }}
+                onInput={emergencyPhoneFormat.onInput}
+                onCompositionStart={emergencyPhoneFormat.onCompositionStart}
+                onCompositionEnd={emergencyPhoneFormat.onCompositionEnd}
+                inputMode="numeric"
+                autoComplete="tel"
                 placeholder="090-1234-5678"
               />
               {errors.emergencyPhone && (
@@ -338,20 +436,52 @@ export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="employmentType">雇用形態 *</Label>
-              <Select
-                value={watch("employmentType") || ""}
-                onValueChange={(value) =>
-                  setValue("employmentType", value as "SPOT" | "REGULAR")
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="雇用形態を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="SPOT">スポット</SelectItem>
-                  <SelectItem value="REGULAR">レギュラー</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="employmentType-spot"
+                    name="employmentType"
+                    value="SPOT"
+                    checked={watch("employmentType") === "SPOT"}
+                    onChange={(e) =>
+                      setValue(
+                        "employmentType",
+                        e.target.value as "SPOT" | "REGULAR"
+                      )
+                    }
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                  />
+                  <Label
+                    htmlFor="employmentType-spot"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    スポット
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="employmentType-regular"
+                    name="employmentType"
+                    value="REGULAR"
+                    checked={watch("employmentType") === "REGULAR"}
+                    onChange={(e) =>
+                      setValue(
+                        "employmentType",
+                        e.target.value as "SPOT" | "REGULAR"
+                      )
+                    }
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                  />
+                  <Label
+                    htmlFor="employmentType-regular"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    レギュラー
+                  </Label>
+                </div>
+              </div>
               {errors.employmentType && (
                 <p className="text-sm text-red-500">
                   {errors.employmentType.message}

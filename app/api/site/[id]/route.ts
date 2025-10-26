@@ -25,6 +25,7 @@ export async function GET(
                 id: true,
                 name: true,
                 employmentType: true,
+                deletedAt: true, // 削除日時も取得
               },
             },
           },

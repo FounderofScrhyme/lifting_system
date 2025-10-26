@@ -79,15 +79,35 @@ export async function PUT(
   }
 }
 
-// DELETE - スタッフ削除
+// DELETE - スタッフ削除（ソフトデリート）
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   try {
-    await prisma.staff.delete({
+    // まずスタッフが存在するかチェック
+    const existingStaff = await prisma.staff.findUnique({
       where: { id },
+    });
+
+    if (!existingStaff) {
+      return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+    }
+
+    if (existingStaff.deletedAt) {
+      return NextResponse.json(
+        { error: "Staff already deleted" },
+        { status: 400 }
+      );
+    }
+
+    // ソフトデリート（deletedAtに現在時刻を設定）
+    await prisma.staff.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+      },
     });
 
     return NextResponse.json({ message: "Staff deleted successfully" });

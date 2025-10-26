@@ -14,6 +14,7 @@ export interface Staff {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 }
 
 export interface StaffApiResponse {

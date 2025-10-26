@@ -1,12 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 /**
- * 電話番号の自動ハイフン付与を行うカスタムフック
+ * 電話番号の自動ハイフン付与を行うカスタムフック（スマホ対応版）
  * @param initialValue 初期値
  * @returns { value, onChange, setValue } フォーマットされた値とハンドラー
  */
 export function usePhoneFormat(initialValue: string = "") {
   const [value, setValue] = useState(initialValue);
+  const isComposingRef = useRef(false);
 
   /**
    * 電話番号をフォーマットする関数
@@ -53,11 +54,50 @@ export function usePhoneFormat(initialValue: string = "") {
   }, []);
 
   /**
-   * 入力値変更時のハンドラー
+   * 入力値変更時のハンドラー（Safari対応版）
    */
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      // IME入力中は処理をスキップ
+      if (isComposingRef.current) return;
+
       const formatted = formatPhoneNumber(e.target.value);
+      setValue(formatted);
+    },
+    [formatPhoneNumber]
+  );
+
+  /**
+   * IME入力開始時のハンドラー（Safari対応）
+   */
+  const onCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+
+  /**
+   * IME入力終了時のハンドラー（Safari対応）
+   */
+  const onCompositionEnd = useCallback(
+    (e: React.CompositionEvent<HTMLInputElement>) => {
+      isComposingRef.current = false;
+      // Safariでは少し遅延を設けて確実に処理
+      setTimeout(() => {
+        const formatted = formatPhoneNumber(e.currentTarget.value);
+        setValue(formatted);
+      }, 10);
+    },
+    [formatPhoneNumber]
+  );
+
+  /**
+   * Safari用の入力ハンドラー（onInputイベント使用）
+   */
+  const onInput = useCallback(
+    (e: React.FormEvent<HTMLInputElement>) => {
+      if (isComposingRef.current) return;
+
+      const target = e.currentTarget as HTMLInputElement;
+      const formatted = formatPhoneNumber(target.value);
       setValue(formatted);
     },
     [formatPhoneNumber]
@@ -77,6 +117,9 @@ export function usePhoneFormat(initialValue: string = "") {
   return {
     value,
     onChange,
+    onInput,
+    onCompositionStart,
+    onCompositionEnd,
     setValue: setFormattedValue,
   };
 }

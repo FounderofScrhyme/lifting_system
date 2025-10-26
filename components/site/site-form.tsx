@@ -24,17 +24,27 @@ import { ErrorHandler } from "@/lib/error-handler";
 import { Site, SiteFormData, SiteType, SiteSuggestion } from "@/types/site";
 
 const siteFormSchema = z.object({
-  name: z.string().min(1, "現場名を入力してください"),
-  clientId: z.string().min(1, "取引先を選択してください"),
-  date: z.string().min(1, "日付を入力してください"),
-  startTime: z.string().min(1, "開始時間を入力してください"),
+  name: z
+    .string({ message: "現場名を入力してください" })
+    .min(1, "現場名を入力してください"),
+  clientId: z
+    .string({ message: "取引先を選択してください" })
+    .min(1, "取引先を選択してください"),
+  date: z
+    .string({ message: "日付を入力してください" })
+    .min(1, "日付を入力してください"),
+  startTime: z
+    .string({ message: "開始時間を入力してください" })
+    .min(1, "開始時間を入力してください"),
   siteType: z.nativeEnum(SiteType, {
     message: "現場タイプを選択してください",
   }),
   managerName: z.string().optional(),
   managerPhone: z.string().optional(),
   postalCode: z.string().optional(),
-  address: z.string().min(1, "住所を入力してください"),
+  address: z
+    .string({ message: "住所を入力してください" })
+    .min(1, "住所を入力してください"),
   googleMapUrl: z.string().optional(),
   workContent: z.string().optional(),
   notes: z.string().optional(),
