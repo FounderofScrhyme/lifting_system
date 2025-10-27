@@ -172,11 +172,11 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     postalCodeFormat.onChange(e);
-    setValue("postalCode", e.target.value);
+    setValue("postalCode", postalCodeFormat.value);
 
-    if (e.target.value.replace(/\D/g, "").length === 7) {
+    if (postalCodeFormat.value.replace(/\D/g, "").length === 7) {
       try {
-        const address = await getAddressFromPostalCode(e.target.value);
+        const address = await getAddressFromPostalCode(postalCodeFormat.value);
         if (address) {
           setValue("address", address);
         }
@@ -467,8 +467,13 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
                 value={managerPhoneFormat.value}
                 onChange={(e) => {
                   managerPhoneFormat.onChange(e);
-                  setValue("managerPhone", e.target.value);
+                  setValue("managerPhone", managerPhoneFormat.value);
                 }}
+                onInput={managerPhoneFormat.onInput}
+                onCompositionStart={managerPhoneFormat.onCompositionStart}
+                onCompositionEnd={managerPhoneFormat.onCompositionEnd}
+                inputMode="numeric"
+                autoComplete="tel"
                 placeholder="090-1234-5678"
               />
             </div>
@@ -480,6 +485,11 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
                 id="postalCode"
                 value={postalCodeFormat.value}
                 onChange={handlePostalCodeChange}
+                onInput={postalCodeFormat.onInput}
+                onCompositionStart={postalCodeFormat.onCompositionStart}
+                onCompositionEnd={postalCodeFormat.onCompositionEnd}
+                inputMode="numeric"
+                autoComplete="postal-code"
                 placeholder="100-1000"
               />
             </div>

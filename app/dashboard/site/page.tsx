@@ -139,7 +139,10 @@ export default function SitePage() {
           <SiteForm
             initialData={editingSite}
             onSuccess={handleFormSuccess}
-            onCancel={() => setActiveTab(previousTab)}
+            onCancel={() => {
+              setEditingSite(null);
+              setActiveTab(previousTab);
+            }}
           />
         </TabsContent>
       </Tabs>

@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     // 指定日の出勤可能スタッフを取得
     const availableStaff = await prisma.staff.findMany({
       where: {
+        deletedAt: null, // ソフトデリートされていないスタッフのみ
         OR: [
           // レギュラースタッフで休日でない場合
           {

@@ -191,7 +191,7 @@ export function AvailabilityCalendar({
         </Button>
       </div>
       <h2 className="text-lg font-semibold">{label}</h2>
-      <div className="flex items-center gap-2">
+      <div className="hidden md:flex items-center gap-2">
         <Badge variant={isRegular ? "destructive" : "default"}>
           {isRegular ? "休日設定モード" : "出勤可能日設定モード"}
         </Badge>
@@ -209,8 +209,8 @@ export function AvailabilityCalendar({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
           <h3 className="text-lg font-semibold">{titleText}</h3>
           <p className="text-sm text-muted-foreground">{descriptionText}</p>
         </div>
@@ -252,7 +252,7 @@ export function AvailabilityCalendar({
       </Card>
 
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
+        <div className="flex-col md:flex-row items-center gap-2">
           <div className="w-3 h-3 bg-green-500 rounded"></div>
           <span>{isRegular ? "休日" : "出勤可能日"}</span>
         </div>

@@ -48,7 +48,10 @@ export default function ClientPage() {
           <h1 className="text-3xl font-bold">取引先管理</h1>
           <p className="text-gray-600">取引先の登録・編集・管理を行います</p>
         </div>
-        <Button onClick={handleNewClient} className="flex items-center gap-2">
+        <Button
+          onClick={handleNewClient}
+          className="hidden md:flex items-center gap-2"
+        >
           <Plus className="h-4 w-4" />
           新規登録
         </Button>

@@ -24,7 +24,7 @@ export async function GET() {
     const regularStaffCount = await prisma.staff.count({
       where: {
         employmentType: "REGULAR",
-        hidden: false,
+        deletedAt: null,
       },
     });
 
@@ -32,7 +32,7 @@ export async function GET() {
     const spotStaffCount = await prisma.staff.count({
       where: {
         employmentType: "SPOT",
-        hidden: false,
+        deletedAt: null,
       },
     });
 
@@ -54,4 +54,3 @@ export async function GET() {
     );
   }
 }
-

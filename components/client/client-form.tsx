@@ -170,8 +170,13 @@ export function ClientForm({
                 value={phoneFormat.value}
                 onChange={(e) => {
                   phoneFormat.onChange(e);
-                  setValue("phone", e.target.value);
+                  setValue("phone", phoneFormat.value);
                 }}
+                onInput={phoneFormat.onInput}
+                onCompositionStart={phoneFormat.onCompositionStart}
+                onCompositionEnd={phoneFormat.onCompositionEnd}
+                inputMode="numeric"
+                autoComplete="tel"
                 placeholder="03-1234-5678"
               />
               {errors.phone && (
@@ -186,8 +191,13 @@ export function ClientForm({
                 value={postalCodeFormat.value}
                 onChange={(e) => {
                   handlePostalCodeChange(e);
-                  setValue("postalCode", e.target.value);
+                  setValue("postalCode", postalCodeFormat.value);
                 }}
+                onInput={postalCodeFormat.onInput}
+                onCompositionStart={postalCodeFormat.onCompositionStart}
+                onCompositionEnd={postalCodeFormat.onCompositionEnd}
+                inputMode="numeric"
+                autoComplete="postal-code"
                 placeholder="100-0001"
               />
               {isLoadingAddress && (
@@ -220,8 +230,13 @@ export function ClientForm({
                 value={contactPhoneFormat.value}
                 onChange={(e) => {
                   contactPhoneFormat.onChange(e);
-                  setValue("contactPhone", e.target.value);
+                  setValue("contactPhone", contactPhoneFormat.value);
                 }}
+                onInput={contactPhoneFormat.onInput}
+                onCompositionStart={contactPhoneFormat.onCompositionStart}
+                onCompositionEnd={contactPhoneFormat.onCompositionEnd}
+                inputMode="numeric"
+                autoComplete="tel"
                 placeholder="090-1234-5678"
               />
             </div>
