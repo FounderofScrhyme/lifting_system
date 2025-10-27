@@ -3,10 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // 本番環境用の設定
   output: "standalone",
-  experimental: {
-    // 本番環境でのパフォーマンス最適化
-    optimizeCss: true,
-  },
   // セキュリティヘッダーの設定
   async headers() {
     return [
