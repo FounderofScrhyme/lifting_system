@@ -30,12 +30,18 @@ export function StaffSelector({ onStaffSelect }: StaffSelectorProps) {
       try {
         const response = await fetch("/api/staff");
         if (response.ok) {
-          const data = await response.json();
-          setStaffList(data);
-          setFilteredStaff(data);
+          const json = await response.json();
+          const list = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : [];
+          setStaffList(list);
+          setFilteredStaff(list);
+        } else {
+          setStaffList([]);
+          setFilteredStaff([]);
         }
       } catch (error) {
         console.error("スタッフデータ取得エラー:", error);
+        setStaffList([]);
+        setFilteredStaff([]);
       } finally {
         setLoading(false);
       }
@@ -100,7 +106,7 @@ export function StaffSelector({ onStaffSelect }: StaffSelectorProps) {
               該当するスタッフが見つかりません
             </div>
           ) : (
-            filteredStaff.map((staff) => (
+            (Array.isArray(filteredStaff) ? filteredStaff : []).map((staff) => (
               <Card
                 key={staff.id}
                 className="cursor-pointer hover:bg-muted/50 transition-colors"
