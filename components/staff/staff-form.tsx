@@ -6,8 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import axios from "axios";
 import { usePhoneFormat } from "@/hooks/use-phone-format";
-import { usePostalCodeFormat } from "@/hooks/use-postal-code-format";
-import { getAddressFromPostalCode } from "@/lib/address-api";
+import { useAddressAutofill } from "@/hooks/use-address-autofill";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -112,7 +111,6 @@ interface StaffFormProps {
 
 export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingAddress, setIsLoadingAddress] = useState(false);
 
   const {
     register,
@@ -133,8 +131,16 @@ export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
     initialData?.emergencyPhone || ""
   );
 
-  // 郵便番号の自動ハイフン付与
-  const postalCodeFormat = usePostalCodeFormat(initialData?.postalCode || "");
+  // 住所自動取得（郵便番号入力）共通フック
+  const {
+    postalCodeFormat,
+    handlePostalCodeChange,
+    handlePostalCodeCompositionEnd,
+    isLoadingAddress,
+  } = useAddressAutofill({
+    onAddressFound: (address) => setValue("address", address),
+    onPostalCodeChange: (code) => setValue("postalCode", code),
+  });
 
   // 日付フォーマット関数
   const formatDateForInput = (dateString: string | undefined): string => {
@@ -186,55 +192,7 @@ export function StaffForm({ onSuccess, initialData, staffId }: StaffFormProps) {
     setValue,
   ]);
 
-  // 郵便番号から住所を自動取得
-  const handlePostalCodeChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    postalCodeFormat.onChange(e);
-
-    const postalCode = e.target.value;
-    const cleanPostalCode = postalCode.replace(/\D/g, "");
-
-    // 7桁の数字が入力された場合のみ住所を取得
-    if (cleanPostalCode.length === 7) {
-      setIsLoadingAddress(true);
-      try {
-        const address = await getAddressFromPostalCode(postalCode);
-        if (address) {
-          setValue("address", address);
-        }
-      } catch (error) {
-        console.error("住所取得エラー:", error);
-      } finally {
-        setIsLoadingAddress(false);
-      }
-    }
-  };
-
-  // 郵便番号のIME入力終了時のハンドラー
-  const handlePostalCodeCompositionEnd = async (
-    e: React.CompositionEvent<HTMLInputElement>
-  ) => {
-    postalCodeFormat.onCompositionEnd(e);
-
-    const postalCode = e.currentTarget.value;
-    const cleanPostalCode = postalCode.replace(/\D/g, "");
-
-    // 7桁の数字が入力された場合のみ住所を取得
-    if (cleanPostalCode.length === 7) {
-      setIsLoadingAddress(true);
-      try {
-        const address = await getAddressFromPostalCode(postalCode);
-        if (address) {
-          setValue("address", address);
-        }
-      } catch (error) {
-        console.error("住所取得エラー:", error);
-      } finally {
-        setIsLoadingAddress(false);
-      }
-    }
-  };
+  // 郵便番号から住所自動取得は共通フックに委譲
 
   const onSubmit = async (data: StaffFormData) => {
     setIsSubmitting(true);

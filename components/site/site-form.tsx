@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { usePhoneFormat } from "@/hooks/use-phone-format";
-import { usePostalCodeFormat } from "@/hooks/use-postal-code-format";
-import { getAddressFromPostalCode } from "@/lib/address-api";
+import { useAddressAutofill } from "@/hooks/use-address-autofill";
 import { siteApiService } from "@/services/site-api";
 import { ErrorHandler } from "@/lib/error-handler";
 import { Site, SiteFormData, SiteType, SiteSuggestion } from "@/types/site";
@@ -78,13 +77,21 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
   });
 
   const managerPhoneFormat = usePhoneFormat("");
-  const postalCodeFormat = usePostalCodeFormat("");
+  const {
+    postalCodeFormat,
+    handlePostalCodeChange,
+    handlePostalCodeCompositionEnd,
+  } = useAddressAutofill({
+    onAddressFound: (address) => setValue("address", address),
+    onPostalCodeChange: (code) => setValue("postalCode", code),
+  });
 
   // フォーマット関数を安定化（依存配列を空にして安定化）
   const setManagerPhone = useCallback((value: string) => {
     managerPhoneFormat.setValue(value);
   }, []);
 
+  // 初期化でのみ使用するため参照の安定性は不要
   const setPostalCode = useCallback((value: string) => {
     postalCodeFormat.setValue(value);
   }, []);
@@ -118,9 +125,11 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     fetchClients();
   }, []);
 
-  // 初期データを設定（取引先データの読み込み完了を待つ）
+  // 初期データを設定（取引先データの読み込み完了を待つ）。一度だけ実行
+  const didInitRef = useRef(false);
   useEffect(() => {
-    if (initialData && !loadingClients && clients.length > 0) {
+    if (didInitRef.current) return;
+    if (!loadingClients && clients.length > 0 && initialData) {
       const formatDateForInput = (dateString: string | Date) => {
         const date =
           typeof dateString === "string" ? new Date(dateString) : dateString;
@@ -149,42 +158,19 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
       setValue("clientId", initialData.clientId);
       setValue("siteType", initialData.siteType);
 
-      console.log("Initial data set with clientId:", initialData.clientId);
-    } else {
-      // 新規作成時はフォームをリセット
+      didInitRef.current = true;
+    } else if (!loadingClients && clients.length > 0 && !initialData) {
+      // 新規作成時は初回のみリセット
       reset({
         siteType: SiteType.AM,
       });
       setManagerPhone("");
       setPostalCode("");
+      didInitRef.current = true;
     }
-  }, [
-    initialData,
-    loadingClients,
-    clients,
-    setValue,
-    setManagerPhone,
-    setPostalCode,
-    reset,
-  ]);
+  }, [initialData, loadingClients, clients, reset, setValue, setManagerPhone]);
 
-  const handlePostalCodeChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    postalCodeFormat.onChange(e);
-    setValue("postalCode", postalCodeFormat.value);
-
-    if (postalCodeFormat.value.replace(/\D/g, "").length === 7) {
-      try {
-        const address = await getAddressFromPostalCode(postalCodeFormat.value);
-        if (address) {
-          setValue("address", address);
-        }
-      } catch (error) {
-        console.error("住所取得エラー:", error);
-      }
-    }
-  };
+  // 郵便番号→住所の自動取得は共通フックに委譲
 
   const handleSiteNameChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -487,7 +473,7 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
                 onChange={handlePostalCodeChange}
                 onInput={postalCodeFormat.onInput}
                 onCompositionStart={postalCodeFormat.onCompositionStart}
-                onCompositionEnd={postalCodeFormat.onCompositionEnd}
+                onCompositionEnd={handlePostalCodeCompositionEnd}
                 inputMode="numeric"
                 autoComplete="postal-code"
                 placeholder="100-1000"
