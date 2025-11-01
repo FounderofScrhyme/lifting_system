@@ -7,18 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import {
-  FileText,
-  Download,
-  Printer,
-  User,
-  Phone,
-  MapPin,
-  Eye,
-} from "lucide-react";
-import { InvoicePDF } from "./invoice-pdf";
+import { FileText, Printer, User, Phone, MapPin, Eye } from "lucide-react";
 import { InvoicePreview } from "./invoice-preview";
-import { pdf } from "@react-pdf/renderer";
 
 interface Staff {
   id: string;
@@ -39,7 +29,6 @@ export function InvoiceForm({ selectedStaff, onBack }: InvoiceFormProps) {
     new Date().toISOString().split("T")[0]
   );
   const [siteNames, setSiteNames] = useState(["", "", ""]);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
   if (!selectedStaff) {
@@ -47,14 +36,7 @@ export function InvoiceForm({ selectedStaff, onBack }: InvoiceFormProps) {
   }
 
   const handleAmountChange = (value: string) => {
-    // 数字のみを許可し、カンマ区切りを自動追加
-    const numericValue = value.replace(/[^\d]/g, "");
-    if (numericValue === "") {
-      setAmount("");
-      return;
-    }
-    const formattedValue = parseInt(numericValue).toLocaleString();
-    setAmount(formattedValue);
+    setAmount(value);
   };
 
   const handleSiteNameChange = (index: number, value: string) => {
@@ -63,94 +45,29 @@ export function InvoiceForm({ selectedStaff, onBack }: InvoiceFormProps) {
     setSiteNames(newSiteNames);
   };
 
-  const handleDownloadPDF = async () => {
+  const handlePrint = () => {
     if (!amount) {
       alert("請求金額を入力してください。");
       return;
     }
 
-    setIsGenerating(true);
-    try {
-      const numericAmount = parseInt(amount.replace(/,/g, ""));
-      const doc = (
-        <InvoicePDF
-          staff={selectedStaff}
-          amount={numericAmount}
-          issueDate={new Date(issueDate).toLocaleDateString("ja-JP")}
-          siteNames={siteNames}
-        />
-      );
-
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `請求書_${selectedStaff.name}_${
-        new Date(issueDate).toISOString().split("T")[0]
-      }.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("PDF生成エラー:", error);
-      alert("PDF生成に失敗しました。");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handlePrint = async () => {
-    if (!amount) {
-      alert("請求金額を入力してください。");
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const numericAmount = parseInt(amount.replace(/,/g, ""));
-      const doc = (
-        <InvoicePDF
-          staff={selectedStaff}
-          amount={numericAmount}
-          issueDate={new Date(issueDate).toLocaleDateString("ja-JP")}
-          siteNames={siteNames}
-        />
-      );
-
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-
-      // 新しいウィンドウでPDFを開く
-      const printWindow = window.open(url, "_blank");
-      if (printWindow) {
-        printWindow.onload = () => {
-          // 2回印刷（控え用と原本用）
-          setTimeout(() => {
-            printWindow.print();
-            setTimeout(() => {
-              printWindow.print();
-            }, 1000);
-          }, 1000);
-        };
-      }
-
-      // 5秒後にURLを解放
+    // プレビューを表示状態にする
+    if (!showPreview) {
+      setShowPreview(true);
+      // プレビューが完全に表示されるまで待ってから印刷
       setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 5000);
-    } catch (error) {
-      console.error("印刷エラー:", error);
-      alert("印刷に失敗しました。");
-    } finally {
-      setIsGenerating(false);
+        window.print();
+      }, 300);
+    } else {
+      // 既にプレビューが表示されている場合は即座に印刷
+      window.print();
     }
   };
 
   return (
     <div className="space-y-6">
       {/* スタッフ情報表示 */}
-      <Card>
+      <Card className="print:hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -193,7 +110,7 @@ export function InvoiceForm({ selectedStaff, onBack }: InvoiceFormProps) {
       </Card>
 
       {/* 請求書情報入力フォーム */}
-      <Card>
+      <Card className="print:hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -256,29 +173,15 @@ export function InvoiceForm({ selectedStaff, onBack }: InvoiceFormProps) {
               {showPreview ? "プレビューを隠す" : "プレビューを表示"}
             </Button>
             <Button
-              onClick={handleDownloadPDF}
-              disabled={isGenerating || !amount}
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              PDFダウンロード
-            </Button>
-            <Button
               onClick={handlePrint}
-              disabled={isGenerating || !amount}
+              disabled={!amount}
               variant="default"
               className="flex items-center gap-2"
             >
               <Printer className="h-4 w-4" />
-              A4用紙2枚印刷
+              印刷
             </Button>
           </div>
-
-          {isGenerating && (
-            <div className="text-center text-muted-foreground">
-              請求書を生成中...
-            </div>
-          )}
         </CardContent>
       </Card>
 

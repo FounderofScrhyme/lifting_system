@@ -4,14 +4,7 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
-
-// 日本語フォントの登録（システムフォントを使用）
-Font.register({
-  family: "NotoSansJP",
-  src: "https://fonts.gstatic.com/s/notosansjp/v52/o-0IIpQlx3QUlC5A4PNr5TRASf6M7Q.woff2",
-});
 
 // 請求書のスタイル定義
 const styles = StyleSheet.create({
@@ -20,7 +13,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     padding: 30,
     fontSize: 12,
-    fontFamily: "NotoSansJP",
+    fontFamily: "Helvetica",
     lineHeight: 1.5,
   },
   header: {

@@ -32,7 +32,7 @@ export default function InvoicePage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* ヘッダー */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 print:hidden">
         {currentStep === "create" && (
           <Button
             variant="outline"
@@ -58,7 +58,7 @@ export default function InvoicePage() {
       </div>
 
       {/* ステップインジケーター */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 print:hidden">
         <div
           className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
             currentStep === "select"
@@ -99,7 +99,7 @@ export default function InvoicePage() {
       </div>
 
       {/* 使用方法の説明 */}
-      <Card>
+      <Card className="print:hidden">
         <CardHeader>
           <CardTitle>使用方法</CardTitle>
         </CardHeader>
@@ -127,7 +127,7 @@ export default function InvoicePage() {
               請求書をPDFファイルとしてダウンロードします。
             </p>
             <p>
-              <strong>A4用紙2枚印刷:</strong>{" "}
+              <span>A4用紙2枚印刷:</span>{" "}
               請求書をA4用紙に2枚印刷します（1枚は控え、1枚は原本用）。
             </p>
           </div>
