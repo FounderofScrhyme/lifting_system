@@ -13,14 +13,17 @@ export async function GET(
     });
 
     if (!staff) {
-      return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "スタッフが見つかりません" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(staff);
   } catch (error) {
     console.error("Error fetching staff:", error);
     return NextResponse.json(
-      { error: "Failed to fetch staff" },
+      { error: "スタッフ取得に失敗しました" },
       { status: 500 }
     );
   }
@@ -71,9 +74,9 @@ export async function PUT(
 
     return NextResponse.json(staff);
   } catch (error) {
-    console.error("Error updating staff:", error);
+    console.error("スタッフ更新エラー:", error);
     return NextResponse.json(
-      { error: "Failed to update staff" },
+      { error: "スタッフ更新に失敗しました" },
       { status: 500 }
     );
   }
@@ -92,12 +95,15 @@ export async function DELETE(
     });
 
     if (!existingStaff) {
-      return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "スタッフが見つかりません" },
+        { status: 404 }
+      );
     }
 
     if (existingStaff.deletedAt) {
       return NextResponse.json(
-        { error: "Staff already deleted" },
+        { error: "スタッフはすでに削除されています" },
         { status: 400 }
       );
     }
@@ -112,9 +118,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Staff deleted successfully" });
   } catch (error) {
-    console.error("Error deleting staff:", error);
+    console.error("スタッフ削除エラー:", error);
     return NextResponse.json(
-      { error: "Failed to delete staff" },
+      { error: "スタッフの削除に失敗しました" },
       { status: 500 }
     );
   }
