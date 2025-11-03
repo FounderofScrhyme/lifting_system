@@ -152,7 +152,7 @@ export const SiteAssignmentCards = memo(function SiteAssignmentCards({
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <span className="font-medium text-sm truncate">{site.name}</span>
             <Badge className={`text-xs ${getSiteTypeColor(site.siteType)}`}>
-              {getSiteTypeLabel(site.siteType)}
+              {site.startTime || getSiteTypeLabel(site.siteType)}
             </Badge>
           </div>
         </div>

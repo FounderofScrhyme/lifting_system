@@ -40,30 +40,6 @@ export function AvailableStaffList({
   setDraggedStaff,
   selectedDate,
 }: AvailableStaffListProps) {
-  const getEmploymentTypeLabel = (type: string) => {
-    switch (type) {
-      case "REGULAR":
-        return "レギュラー";
-      case "SPOT":
-        return "スポット";
-      default:
-        return type;
-    }
-  };
-
-  const getEmploymentTypeColor = (type: string) => {
-    switch (type) {
-      case "REGULAR":
-        return "bg-blue-100 text-blue-800";
-      case "SPOT":
-        return "bg-green-100 text-green-800";
-      case "SUPPORT":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   const isStaffAssigned = (staffId: string) => {
     // スタッフが既に割り当てられているかどうかをチェック
     // ただし、複数の現場に配置することは許可する
@@ -98,17 +74,17 @@ export function AvailableStaffList({
 
   if (allStaff.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+      <Card className="h-full flex flex-col">
+        <CardHeader className="flex-shrink-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="h-4 w-4" />
             出勤可能スタッフ
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="text-center">
             <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 text-sm">
               出勤可能なスタッフがいません
             </p>
             <SupportStaffModal
@@ -122,24 +98,29 @@ export function AvailableStaffList({
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            出勤可能スタッフ ({allStaff.length}名)
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="h-4 w-4" />
+            出勤可能スタッフ
           </CardTitle>
           <SupportStaffModal
             onAddSupportStaff={onAddSupportStaff}
             selectedDate={selectedDate}
           />
         </div>
-        <p className="text-sm text-muted-foreground">
-          スタッフをドラッグして現場に配置してください
-        </p>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-xs text-muted-foreground">
+            ドラッグして現場に配置
+          </p>
+          <Badge variant="secondary" className="text-xs">
+            {allStaff.length}名
+          </Badge>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
+      <CardContent className="flex-1 overflow-y-auto">
+        <div className="grid grid-cols-2 gap-2">
           {allStaff.map((member) => {
             const isAssigned = isStaffAssigned(member.id);
             const isDragging = draggedStaff === member.id;
@@ -151,31 +132,18 @@ export function AvailableStaffList({
                 onDragStart={(e) => handleDragStart(e, member.id)}
                 onDragEnd={handleDragEnd}
                 className={`
-                  inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-all cursor-move
+                  flex items-center p-2.5 rounded-lg border transition-all cursor-move
                   ${
                     isAssigned
                       ? "bg-blue-50 border-blue-200 hover:border-blue-300"
                       : "bg-background border-border hover:border-primary/50"
                   }
-                  ${isDragging ? "opacity-50 scale-95" : "hover:scale-105"}
+                  ${isDragging ? "opacity-50 scale-95" : "hover:scale-[1.02]"}
                 `}
               >
-                <span className="font-medium">{member.name}</span>
-                <Badge
-                  variant="outline"
-                  className={`text-xs px-1 py-0 ${getEmploymentTypeColor(
-                    member.employmentType
-                  )}`}
-                >
-                  {member.employmentType === "SUPPORT"
-                    ? "応援"
-                    : getEmploymentTypeLabel(member.employmentType)}
-                </Badge>
-                {isAssigned && (
-                  <Badge variant="secondary" className="text-xs px-1 py-0">
-                    配置済み
-                  </Badge>
-                )}
+                <span className="font-medium text-sm truncate flex-1">
+                  {member.name}
+                </span>
               </div>
             );
           })}

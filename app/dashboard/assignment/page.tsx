@@ -7,6 +7,7 @@ import { SiteAssignmentCards } from "@/components/assignment/site-assignment-car
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -21,6 +22,7 @@ interface AssignmentData {
 }
 
 export default function AssignmentPage() {
+  const [activeTab, setActiveTab] = useState("calendar");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableStaff, setAvailableStaff] = useState<Staff[]>([]);
   const [supportStaff, setSupportStaff] = useState<SupportStaff[]>([]);
@@ -34,6 +36,7 @@ export default function AssignmentPage() {
   const handleDateSelect = async (date: string) => {
     setSelectedDate(date);
     await fetchAssignmentData(date);
+    setActiveTab("assignment");
   };
 
   const fetchAssignmentData = async (date: string) => {
@@ -305,61 +308,72 @@ export default function AssignmentPage() {
             スタッフの現場への振り分けを行います
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">
-            <CalendarIcon className="h-3 w-3 mr-1" />
-            日付選択
-          </Badge>
-        </div>
+        {selectedDate && (
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">
+              <CalendarIcon className="h-3 w-3 mr-1" />
+              {selectedDate}
+            </Badge>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* カレンダー */}
-        <div className="lg:col-span-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="calendar">カレンダー</TabsTrigger>
+          <TabsTrigger value="assignment">振り分け</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="calendar" className="space-y-4">
           <AssignmentCalendar
             onDateSelect={handleDateSelect}
             selectedDate={selectedDate}
           />
-        </div>
+        </TabsContent>
 
-        {/* メインコンテンツ */}
-        <div className="lg:col-span-2 space-y-4">
+        <TabsContent value="assignment" className="space-y-4">
           {selectedDate ? (
-            <>
-              {/* 出勤可能スタッフ */}
-              <AvailableStaffList
-                staff={availableStaff}
-                supportStaff={supportStaff}
-                assignments={assignments}
-                onStaffAssign={handleStaffAssign}
-                onAddSupportStaff={handleAddSupportStaff}
-                draggedStaff={draggedStaff}
-                setDraggedStaff={setDraggedStaff}
-                selectedDate={selectedDate}
-              />
-
-              {/* 現場割り当てカード */}
-              <SiteAssignmentCards
-                amSites={amSites}
-                pmSites={pmSites}
-                assignments={assignments}
-                staff={availableStaff}
-                supportStaff={supportStaff}
-                onStaffAssign={handleStaffAssign}
-                onStaffUnassign={handleStaffUnassign}
-                loading={loading}
-                draggedStaff={draggedStaff}
-                setDraggedStaff={setDraggedStaff}
-              />
-
-              {/* 確定ボタン */}
-              <div className="flex justify-end">
-                <Button onClick={handleConfirm} disabled={saving} size="lg">
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? "確定中..." : "人員配置を確定"}
-                </Button>
+            <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 h-[calc(100vh-250px)] max-lg:h-auto">
+              {/* 左側: 出勤可能スタッフ（縦長固定） */}
+              <div className="h-full lg:h-full max-lg:h-[400px] overflow-y-auto">
+                <AvailableStaffList
+                  staff={availableStaff}
+                  supportStaff={supportStaff}
+                  assignments={assignments}
+                  onStaffAssign={handleStaffAssign}
+                  onAddSupportStaff={handleAddSupportStaff}
+                  draggedStaff={draggedStaff}
+                  setDraggedStaff={setDraggedStaff}
+                  selectedDate={selectedDate}
+                />
               </div>
-            </>
+
+              {/* 右側: 現場割り当てカード */}
+              <div className="flex flex-col h-full max-lg:h-auto overflow-hidden">
+                <div className="flex-1 overflow-y-auto pr-2 max-lg:max-h-[600px]">
+                  <SiteAssignmentCards
+                    amSites={amSites}
+                    pmSites={pmSites}
+                    assignments={assignments}
+                    staff={availableStaff}
+                    supportStaff={supportStaff}
+                    onStaffAssign={handleStaffAssign}
+                    onStaffUnassign={handleStaffUnassign}
+                    loading={loading}
+                    draggedStaff={draggedStaff}
+                    setDraggedStaff={setDraggedStaff}
+                  />
+                </div>
+
+                {/* 確定ボタン */}
+                <div className="flex justify-end pt-4 border-t mt-4">
+                  <Button onClick={handleConfirm} disabled={saving} size="lg">
+                    <Save className="h-4 w-4 mr-2" />
+                    {saving ? "確定中..." : "人員配置を確定"}
+                  </Button>
+                </div>
+              </div>
+            </div>
           ) : (
             <Card>
               <CardContent className="flex items-center justify-center h-64">
@@ -372,8 +386,8 @@ export default function AssignmentPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
