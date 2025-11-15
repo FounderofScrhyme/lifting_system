@@ -17,21 +17,26 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Admin認証のチェック
-        const adminEmail = process.env.ADMIN_EMAIL;
-        const adminPassword = process.env.ADMIN_PASSWORD;
+        const adminEmail = process.env.ADMIN_EMAIL?.trim();
+        const adminPassword = process.env.ADMIN_PASSWORD?.trim();
+        const inputEmail = credentials.email.trim().toLowerCase();
+        const inputPassword = credentials.password;
 
-        if (adminEmail && adminPassword && credentials.email === adminEmail) {
-          // メールアドレスがadmin用メールアドレスと一致する場合
-          if (credentials.password === adminPassword) {
-            return {
-              id: "admin",
-              email: adminEmail,
-              name: "管理者",
-              role: "admin",
-            };
+        if (adminEmail && adminPassword) {
+          const normalizedAdminEmail = adminEmail.toLowerCase();
+          // メールアドレスがadmin用メールアドレスと一致する場合（大文字小文字を無視）
+          if (inputEmail === normalizedAdminEmail) {
+            if (inputPassword === adminPassword) {
+              return {
+                id: "admin",
+                email: adminEmail,
+                name: "管理者",
+                role: "admin",
+              };
+            }
+            // adminメールアドレスだがパスワードが間違っている場合は認証失敗
+            throw new Error("パスワードが正しくありません");
           }
-          // adminメールアドレスだがパスワードが間違っている場合は認証失敗
-          throw new Error("パスワードが正しくありません");
         }
 
         // 一般ユーザーの認証（既存のロジック）
