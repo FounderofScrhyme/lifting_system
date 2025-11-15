@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 
 interface SiteCalendarToolbarProps {
   label: string;
-  onNavigate: (action: "PREV" | "NEXT" | "TODAY") => void;
+  onNavigate: (action: "PREV" | "NEXT" | "TODAY") => Date;
   onMonthChange?: (date: Date) => void;
 }
 

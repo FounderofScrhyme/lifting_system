@@ -11,7 +11,7 @@ interface UseSiteCalendarReturn {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
   events: SiteCalendarEvent[];
-  handleNavigate: (action: "PREV" | "NEXT" | "TODAY") => void;
+  handleNavigate: (action: "PREV" | "NEXT" | "TODAY") => Date;
   handleSelectSlot: (slotInfo: {
     start: Date;
     end: Date;
