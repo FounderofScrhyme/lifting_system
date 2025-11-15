@@ -18,7 +18,6 @@ export async function GET(
 
     return NextResponse.json(client);
   } catch (error) {
-    console.error("Error fetching client:", error);
     return NextResponse.json(
       { error: "Failed to fetch client" },
       { status: 500 }
@@ -59,7 +58,6 @@ export async function PUT(
 
     return NextResponse.json(client);
   } catch (error) {
-    console.error("Error updating client:", error);
     return NextResponse.json(
       { error: "Failed to update client" },
       { status: 500 }
@@ -80,9 +78,8 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Client deleted successfully" });
   } catch (error) {
-    console.error("Error deleting client:", error);
     return NextResponse.json(
-      { error: "Failed to delete client" },
+      { error: "取引先削除に失敗しました" },
       { status: 500 }
     );
   }

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -55,7 +54,7 @@ export function ClientList({ onEdit, onRefresh }: ClientListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 5,
+    limit: 10,
     total: 0,
     totalPages: 0,
     hasNext: false,
@@ -69,12 +68,11 @@ export function ClientList({ onEdit, onRefresh }: ClientListProps) {
   const fetchClients = async () => {
     try {
       const response = await axios.get(
-        `/api/client?page=${currentPage}&limit=5`
+        `/api/client?page=${currentPage}&limit=10`
       );
       setClients(response.data.data);
       setPagination(response.data.pagination);
     } catch (error) {
-      console.error("Error fetching clients:", error);
       toast.error("取引先一覧の取得に失敗しました");
     } finally {
       setLoading(false);

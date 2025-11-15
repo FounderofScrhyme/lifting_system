@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AssignmentCalendar } from "@/components/assignment/assignment-calendar";
 import { AvailableStaffList } from "@/components/assignment/available-staff-list";
 import { SiteAssignmentCards } from "@/components/assignment/site-assignment-cards";
@@ -300,7 +300,7 @@ export default function AssignmentPage() {
   };
 
   return (
-    <div className="space-y-6 p-2">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">振り分け管理</h1>
@@ -333,9 +333,23 @@ export default function AssignmentPage() {
 
         <TabsContent value="assignment" className="space-y-4">
           {selectedDate ? (
-            <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 h-[calc(100vh-250px)] max-lg:h-auto">
-              {/* 左側: 出勤可能スタッフ（縦長固定） */}
-              <div className="h-full lg:h-full max-lg:h-[400px] overflow-y-auto">
+            <div className="relative">
+              {/* 左側: 出勤可能スタッフ（固定位置） */}
+              <div className="fixed left-32 ml-32 top-[calc(250px+1rem)] w-[300px] h-[calc(100vh-300px)] z-10 max-lg:hidden">
+                <AvailableStaffList
+                  staff={availableStaff}
+                  supportStaff={supportStaff}
+                  assignments={assignments}
+                  onStaffAssign={handleStaffAssign}
+                  onAddSupportStaff={handleAddSupportStaff}
+                  draggedStaff={draggedStaff}
+                  setDraggedStaff={setDraggedStaff}
+                  selectedDate={selectedDate}
+                />
+              </div>
+
+              {/* モバイル用: 出勤可能スタッフ（通常のレイアウト） */}
+              <div className="lg:hidden mb-4 h-[400px] overflow-y-auto">
                 <AvailableStaffList
                   staff={availableStaff}
                   supportStaff={supportStaff}
@@ -349,7 +363,7 @@ export default function AssignmentPage() {
               </div>
 
               {/* 右側: 現場割り当てカード */}
-              <div className="flex flex-col h-full max-lg:h-auto overflow-hidden">
+              <div className="flex flex-col lg:ml-[320px] max-lg:ml-0">
                 <div className="flex-1 overflow-y-auto pr-2 max-lg:max-h-[600px]">
                   <SiteAssignmentCards
                     amSites={amSites}

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 interface SiteCalendarToolbarProps {
   label: string;
   onNavigate: (action: "PREV" | "NEXT" | "TODAY") => void;
-  onMonthChange?: () => void;
+  onMonthChange?: (date: Date) => void;
 }
 
 export function SiteCalendarToolbar({
@@ -13,8 +13,11 @@ export function SiteCalendarToolbar({
   onMonthChange,
 }: SiteCalendarToolbarProps) {
   const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
-    onNavigate(action);
-    onMonthChange?.();
+    const newDate = onNavigate(action);
+    // 月変更を検知して親に通知
+    if (newDate && onMonthChange) {
+      onMonthChange(newDate);
+    }
   };
 
   return (

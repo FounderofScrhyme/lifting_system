@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
@@ -13,16 +13,43 @@ import { Site } from "@/types/site";
 import { ErrorHandler } from "@/lib/error-handler";
 import { useRouter } from "next/navigation";
 
+/**
+ * 月の開始日と終了日を計算する（表示月の前後1ヶ月を含む）
+ */
+function calculateMonthRange(centerDate: Date = new Date()) {
+  const start = new Date(centerDate);
+  start.setMonth(start.getMonth() - 1);
+  start.setDate(1);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(centerDate);
+  end.setMonth(end.getMonth() + 2);
+  end.setDate(0); // 前月の最終日
+  end.setHours(23, 59, 59, 999);
+
+  return {
+    startDate: start.toISOString().split("T")[0],
+    endDate: end.toISOString().split("T")[0],
+  };
+}
+
 export default function SitePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("calendar");
   const [editingSite, setEditingSite] = useState<Site | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [previousTab, setPreviousTab] = useState<string>("calendar");
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
+
+  // カレンダーの月に基づいて月範囲を計算
+  const monthRange = useMemo(() => {
+    return calculateMonthRange(calendarMonth);
+  }, [calendarMonth]);
 
   const { sites, loading, error, refreshSites } = useSiteData({
     autoFetch: true,
-    filters: {}, // 明示的に空のフィルターを指定
+    filters: {},
+    monthRange, // 月単位取得を指定
   });
 
   const handleDateSelect = useCallback((date: string) => {
@@ -54,9 +81,10 @@ export default function SitePage() {
     setActiveTab("form");
   }, [activeTab]);
 
-  const handleCalendarMonthChange = useCallback(async () => {
-    await refreshSites();
-  }, [refreshSites]);
+  const handleCalendarMonthChange = useCallback((newDate: Date) => {
+    setCalendarMonth(newDate);
+    // 月が変更されたら、useSiteDataのmonthRangeが更新され、自動的に再取得される
+  }, []);
 
   const handleViewDetail = useCallback(
     (site: Site) => {
@@ -117,6 +145,8 @@ export default function SitePage() {
               onEdit={handleEdit}
               onRefresh={refreshSites}
               onViewDetail={handleViewDetail}
+              sites={sites}
+              loading={loading}
             />
           ) : (
             <div className="text-center py-8">

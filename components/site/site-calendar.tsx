@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -48,7 +48,7 @@ interface SiteCalendarProps {
   selectedDate?: string;
   sites: Site[];
   loading?: boolean;
-  onMonthChange?: () => void;
+  onMonthChange?: (date: Date) => void;
 }
 
 export function SiteCalendar({
@@ -68,6 +68,12 @@ export function SiteCalendar({
     getEventStyle,
     getDateCellStyle,
   } = useSiteCalendar({ sites, onDateSelect });
+
+  // カレンダーの月が変更されたときに親に通知
+  const handleDateChange = useCallback((date: Date) => {
+    setCurrentDate(date);
+    onMonthChange?.(date);
+  }, [setCurrentDate, onMonthChange]);
 
   const eventStyleGetter = useMemo(() => getEventStyle, [getEventStyle]);
   const dateCellStyleGetter = useMemo(
@@ -108,7 +114,7 @@ export function SiteCalendar({
               views={[Views.MONTH]}
               defaultView={Views.MONTH}
               date={currentDate}
-              onNavigate={setCurrentDate}
+              onNavigate={handleDateChange}
               onSelectSlot={handleSelectSlot}
               onSelectEvent={handleSelectEvent}
               selectable

@@ -125,50 +125,50 @@ export function SiteForm({ initialData, onSuccess, onCancel }: SiteFormProps) {
     fetchClients();
   }, []);
 
-  // 初期データを設定（取引先データの読み込み完了を待つ）。一度だけ実行
-  const didInitRef = useRef(false);
+  // 初期データを設定（取引先データの読み込み完了を待つ）
   useEffect(() => {
-    if (didInitRef.current) return;
-    if (!loadingClients && clients.length > 0 && initialData) {
-      const formatDateForInput = (dateString: string | Date) => {
-        const date =
-          typeof dateString === "string" ? new Date(dateString) : dateString;
-        return date.toISOString().split("T")[0];
-      };
+    if (!loadingClients && clients.length > 0) {
+      if (initialData) {
+        // 編集時：初期データをフォームに設定
+        const formatDateForInput = (dateString: string | Date) => {
+          const date =
+            typeof dateString === "string" ? new Date(dateString) : dateString;
+          return date.toISOString().split("T")[0];
+        };
 
-      // まずフォーマット関数の値を設定
-      if (initialData.managerPhone) {
-        setManagerPhone(initialData.managerPhone);
+        // まずフォーマット関数の値を設定
+        if (initialData.managerPhone) {
+          setManagerPhone(initialData.managerPhone);
+        }
+        if (initialData.postalCode) {
+          setPostalCode(initialData.postalCode);
+        }
+
+        // フォームの値を設定（取引先と現場タイプを含む）
+        reset({
+          name: initialData.name,
+          clientId: initialData.clientId,
+          date: formatDateForInput(initialData.date),
+          startTime: initialData.startTime,
+          siteType: initialData.siteType,
+          managerName: initialData.managerName || "",
+          managerPhone: initialData.managerPhone || "",
+          postalCode: initialData.postalCode || "",
+          address: initialData.address,
+          googleMapUrl: initialData.googleMapUrl || "",
+          workContent: initialData.workContent || "",
+          notes: initialData.notes || "",
+        });
+      } else {
+        // 新規作成時はリセット
+        reset({
+          siteType: SiteType.AM,
+        });
+        setManagerPhone("");
+        setPostalCode("");
       }
-      if (initialData.postalCode) {
-        setPostalCode(initialData.postalCode);
-      }
-
-      // フォームの値を設定
-      setValue("name", initialData.name);
-      setValue("date", formatDateForInput(initialData.date));
-      setValue("startTime", initialData.startTime);
-      setValue("managerName", initialData.managerName || "");
-      setValue("managerPhone", initialData.managerPhone || "");
-      setValue("postalCode", initialData.postalCode || "");
-      setValue("address", initialData.address);
-      setValue("googleMapUrl", initialData.googleMapUrl || "");
-      setValue("workContent", initialData.workContent || "");
-      setValue("notes", initialData.notes || "");
-      setValue("clientId", initialData.clientId);
-      setValue("siteType", initialData.siteType);
-
-      didInitRef.current = true;
-    } else if (!loadingClients && clients.length > 0 && !initialData) {
-      // 新規作成時は初回のみリセット
-      reset({
-        siteType: SiteType.AM,
-      });
-      setManagerPhone("");
-      setPostalCode("");
-      didInitRef.current = true;
     }
-  }, [initialData, loadingClients, clients, reset, setValue, setManagerPhone]);
+  }, [initialData, loadingClients, clients.length, reset, setManagerPhone, setPostalCode]);
 
   // 郵便番号→住所の自動取得は共通フックに委譲
 

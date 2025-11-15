@@ -158,7 +158,7 @@ export default function InvoiceCheckPage() {
   );
 
   return (
-    <div className="space-y-6 p-2">
+    <div className="space-y-6 p-6">
       {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div>

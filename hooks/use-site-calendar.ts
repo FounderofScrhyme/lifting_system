@@ -56,7 +56,7 @@ export function useSiteCalendar({
   }, [sites]);
 
   const handleNavigate = useCallback(
-    (action: "PREV" | "NEXT" | "TODAY") => {
+    (action: "PREV" | "NEXT" | "TODAY"): Date => {
       const newDate = new Date(currentDate);
 
       switch (action) {
@@ -67,10 +67,13 @@ export function useSiteCalendar({
           newDate.setMonth(newDate.getMonth() + 1);
           break;
         case "TODAY":
-          return setCurrentDate(new Date());
+          const today = new Date();
+          setCurrentDate(today);
+          return today;
       }
 
       setCurrentDate(newDate);
+      return newDate;
     },
     [currentDate]
   );

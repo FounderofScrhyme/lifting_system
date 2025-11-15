@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "5");
+    const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
     const [clients, total] = await Promise.all([
@@ -32,9 +32,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching clients:", error);
     return NextResponse.json(
-      { error: "Failed to fetch clients" },
+      { error: "取引先一覧の取得に失敗しました" },
       { status: 500 }
     );
   }
@@ -68,9 +67,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(client, { status: 201 });
   } catch (error) {
-    console.error("Error creating client:", error);
     return NextResponse.json(
-      { error: "Failed to create client" },
+      { error: "取引先作成に失敗しました" },
       { status: 500 }
     );
   }

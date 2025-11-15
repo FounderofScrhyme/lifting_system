@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Site } from "@/types/site";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,6 @@ import {
   MapPin,
   Clock,
   User,
-  Phone,
   Eye,
   Copy,
 } from "lucide-react";
@@ -38,6 +37,8 @@ interface SiteListProps {
   onEdit: (site: Site) => void;
   onRefresh: () => void;
   onViewDetail?: (site: Site) => void;
+  sites?: Site[]; // 親から受け取る現場データ（重複API呼び出しを削除）
+  loading?: boolean; // 親から受け取るローディング状態
 }
 
 export function SiteList({
@@ -45,31 +46,51 @@ export function SiteList({
   onEdit,
   onRefresh,
   onViewDetail,
+  sites: parentSites,
+  loading: parentLoading,
 }: SiteListProps) {
-  const [sites, setSites] = useState<Site[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 親からデータが渡されている場合はそれを使用、なければ従来通りAPI呼び出し
+  const [localSites, setLocalSites] = useState<Site[]>([]);
+  const [localLoading, setLocalLoading] = useState(false);
 
+  // 親からデータが渡されている場合はそれを使用
+  const sites = parentSites || localSites;
+  const loading = parentLoading !== undefined ? parentLoading : localLoading;
+
+  // 親からデータが渡されていない場合のみ、従来のAPI呼び出しを実行
   useEffect(() => {
-    if (selectedDate) {
+    if (!parentSites && selectedDate) {
       fetchSites();
     }
-  }, [selectedDate]);
+  }, [selectedDate, parentSites]);
 
   const fetchSites = async () => {
     try {
-      setLoading(true);
+      setLocalLoading(true);
       const sitesResponse = await axios.get(`/api/site?date=${selectedDate}`);
-      setSites(sitesResponse.data.data);
-
-      // デバッグ用ログ
-      console.log("Fetched sites:", sitesResponse.data.data.length);
+      setLocalSites(sitesResponse.data.data);
     } catch (error) {
       console.error("Error fetching sites:", error);
       toast.error("現場一覧の取得に失敗しました");
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
+
+  // 選択された日付でフィルタリング
+  const filteredSites = useMemo(() => {
+    if (!selectedDate || !sites) return [];
+
+    const selectedDateObj = new Date(selectedDate);
+    selectedDateObj.setHours(0, 0, 0, 0);
+    const nextDay = new Date(selectedDateObj);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    return sites.filter((site) => {
+      const siteDate = new Date(site.date);
+      return siteDate >= selectedDateObj && siteDate < nextDay;
+    });
+  }, [sites, selectedDate]);
 
   // 現場に割り当てられたスタッフの名前を取得
   const getAssignedStaffNames = (site: Site) => {
@@ -484,12 +505,13 @@ export function SiteList({
     <Card>
       <CardHeader>
         <CardTitle>
-          {selectedDate ? formatDate(selectedDate) : "現場一覧"} ({sites.length}
+          {selectedDate ? formatDate(selectedDate) : "現場一覧"} (
+          {filteredSites.length}
           件)
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {sites.length === 0 ? (
+        {filteredSites.length === 0 ? (
           <div className="text-center py-8">
             <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">
@@ -514,7 +536,7 @@ export function SiteList({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sites.map((site) => (
+                {filteredSites.map((site) => (
                   <TableRow
                     key={site.id}
                     className={site.cancelled ? "opacity-50" : ""}
@@ -537,10 +559,10 @@ export function SiteList({
                         try {
                           const assignedStaffNames =
                             getAssignedStaffNames(site);
-                          console.log(
-                            `Staff names for site ${site.id}:`,
-                            assignedStaffNames
-                          );
+                          // console.log(
+                          //   `Staff names for site ${site.id}:`,
+                          //   assignedStaffNames
+                          // );
 
                           if (assignedStaffNames.length > 0) {
                             const maxDisplay = 4;
