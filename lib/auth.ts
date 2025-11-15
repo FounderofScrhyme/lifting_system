@@ -13,9 +13,28 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error("メールアドレスとパスワードを入力してください");
         }
 
+        // Admin認証のチェック
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (adminEmail && adminPassword && credentials.email === adminEmail) {
+          // メールアドレスがadmin用メールアドレスと一致する場合
+          if (credentials.password === adminPassword) {
+            return {
+              id: "admin",
+              email: adminEmail,
+              name: "管理者",
+              role: "admin",
+            };
+          }
+          // adminメールアドレスだがパスワードが間違っている場合は認証失敗
+          throw new Error("パスワードが正しくありません");
+        }
+
+        // 一般ユーザーの認証（既存のロジック）
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email,
@@ -23,7 +42,8 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          return null;
+          // セキュリティ上の理由から、メールアドレスの存在有無を明示しない
+          throw new Error("メールアドレスまたはパスワードが正しくありません");
         }
 
         // パスワード検証（ハッシュ化されたパスワードと比較）
@@ -33,13 +53,14 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
-          return null;
+          throw new Error("メールアドレスまたはパスワードが正しくありません");
         }
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
+          role: "user",
         };
       },
     }),
@@ -55,12 +76,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as any).role || "user";
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         (session.user as any).id = token.id as string;
+        (session.user as any).role = token.role as string;
       }
       return session;
     },
